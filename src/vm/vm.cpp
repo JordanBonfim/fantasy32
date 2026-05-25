@@ -1,8 +1,9 @@
 #include "vm.h"
+#include "../util/util.cpp"
+#include "opcodes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- 
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
@@ -41,13 +42,29 @@ void VM::runInstr() {
   uint32_t i_rt = (instr >> 18) & 0xF;
   uint32_t i_imm = instr & 0x3FFFF;
 
-  this->regs[PC] += 4; // Increment PC to point to the next instruction
+  this->regs[PC] += 4;
 
   switch (opcode) {
-  case MOVL: {
+  case MOVL:
     this->regs[i_rt] = (i_imm & 0xFFFF);
     break;
-  }
+  case MOVH:
+    this->regs[i_rt] = i_rt | (i_imm << 16);
+    break;
+  case LOAD:
+    this->regs[i_rt] = this->mem[i_rs + (i_imm * 4)];
+    if (!isInsideMem) {
+      printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+      exit(1);
+    }
+    break;
+  case STORE:
+    this->mem[i_rs + (i_imm * 4)] = i_rt;
+    if (!isInsideMem) {
+      printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+      exit(1);
+    }
+    break;
   default:
     printf("Unknown opcode: 0x%X\n", opcode);
     exit(1);

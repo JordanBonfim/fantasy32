@@ -10,11 +10,11 @@ services:
           target: /app/main.cpp
 
         - action: sync+restart   # código e headers da VM
-          path: ./vm
+          path: ./src/vm
           target: /app/vm
     
         - action: sync+restart   # pasta de jogo mantida no layout real
-          path: ./game
+          path: ./src/game
           target: /app/game
 
         - action: rebuild        # mudança nas regras de build exige nova imagem

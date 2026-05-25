@@ -39,9 +39,10 @@ Depois de subir o container, lembre de abrir o Docker Desktop e garantir que o c
 
 ## Estrutura do projeto
 
-- `assembler/`: código do assembler da linguagem do fantasy computer.
-- `vm/`: implementação da máquina virtual.
-- `game/`: arquivos relacionados ao jogo executado na VM.
+- `src/assembler/`: código do assembler da linguagem do fantasy computer.
+- `src/vm/`: implementação da máquina virtual.
+- `src/game/`: arquivos relacionados ao jogo executado na VM.
+- `src/utils/`: utilitários e helpers do projeto.
 - `main.cpp`: ponto de entrada principal do projeto.
 
 ## Observações
