@@ -1,11 +1,11 @@
 CXX      := g++
 CXXFLAGS := -std=c++17 -Wall -O0 -g -MMD -MP
-INCLUDES := -Ivm -Igame
-SRC_DIRS := vm game
+INCLUDES := -Isrc/vm -Isrc/game -Isrc/utils
+SRC_DIRS := src/vm src/game src/utils
 BUILD_DIR := build
 TARGET    := $(BUILD_DIR)/app
 
-SRCS := main.cpp $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
+SRCS := src/main.cpp $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
