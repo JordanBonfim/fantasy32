@@ -46,72 +46,109 @@ void VM::runInstr() {
   this->regs[PC] += 4;
 
   switch (opcode) {
-  // Arithmetic and logical instructions (type R, except for ADDI)
-  case ADD:
-    this->regs[i_rd] = this->regs[i_rs] + this->regs[i_rt];
-    break;
-  case SUB:
-    this->regs[i_rd] = this->regs[i_rs] - this->regs[i_rt];
-    break;
-  case MUL:
-    this->regs[i_rd] = this->regs[i_rs] * this->regs[i_rt];
-    break;
-  case DIV:
-    this->regs[i_rd] = this->regs[i_rs] / this->regs[i_rt];
-    break;
-  case MOD:
-    this->regs[i_rd] = this->regs[i_rs] % this->regs[i_rt];
-    break;
-  case AND:
-    this->regs[i_rd] = this->regs[i_rs] & this->regs[i_rt];
-    break;
-  case OR:
-    this->regs[i_rd] = this->regs[i_rs] | this->regs[i_rt];
-    break;
-  case XOR:
-    this->regs[i_rd] = this->regs[i_rs] ^ this->regs[i_rt];
-    break;
-  case SHL:
-    this->regs[i_rd] = this->regs[i_rs] << (this->regs[i_rt] & 0x1F);
-    break;
-  case SHR:
-    this->regs[i_rd] = this->regs[i_rs] >> (this->regs[i_rt] & 0x1F);
-    break;
-  case ROL:
-    this->regs[i_rd] = (this->regs[i_rs] << (this->regs[i_rt] & 0x1F)) |
-                       (this->regs[i_rs] >> (32 - (this->regs[i_rt] & 0x1F)));
-    break;
-  case ROR:
-    this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
-                       (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
-    break;
-  case ADDI: // Type I
-    this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
-    break;
+    // Arithmetic and logical instructions (type R, except for ADDI)
+    case ADD:
+      this->regs[i_rd] = this->regs[i_rs] + this->regs[i_rt];
+      break;
+    case SUB:
+      this->regs[i_rd] = this->regs[i_rs] - this->regs[i_rt];
+      break;
+    case MUL:
+      this->regs[i_rd] = this->regs[i_rs] * this->regs[i_rt];
+      break;
+    case DIV:
+      this->regs[i_rd] = this->regs[i_rs] / this->regs[i_rt];
+      break;
+    case MOD:
+      this->regs[i_rd] = this->regs[i_rs] % this->regs[i_rt];
+      break;
+    case AND:
+      this->regs[i_rd] = this->regs[i_rs] & this->regs[i_rt];
+      break;
+    case OR:
+      this->regs[i_rd] = this->regs[i_rs] | this->regs[i_rt];
+      break;
+    case XOR:
+      this->regs[i_rd] = this->regs[i_rs] ^ this->regs[i_rt];
+      break;
+    case SHL:
+      this->regs[i_rd] = this->regs[i_rs] << (this->regs[i_rt] & 0x1F);
+      break;
+    case SHR:
+      this->regs[i_rd] = this->regs[i_rs] >> (this->regs[i_rt] & 0x1F);
+      break;
+    case ROL:
+      this->regs[i_rd] = (this->regs[i_rs] << (this->regs[i_rt] & 0x1F)) |
+                         (this->regs[i_rs] >> (32 - (this->regs[i_rt] & 0x1F)));
+      break;
+    case ROR:
+      this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
+                         (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
+      break;
+    case ADDI:  // Type I
+      this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
+      break;
 
-  // Memory movement instructions (type I)
-  case MOVL:
-    this->regs[i_rt] = (i_imm & 0xFFFF);
-    break;
-  case MOVH:
-    this->regs[i_rt] = i_rt | (i_imm << 16);
-    break;
-  case LOAD:
-    this->regs[i_rt] = this->mem[i_rs + (i_imm * 4)];
-    if (!isInsideMem) {
-      printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+    // Memory movement instructions (type I)
+    case MOVL:
+      this->regs[i_rt] = (i_imm & 0xFFFF);
+      break;
+    case MOVH:
+      this->regs[i_rt] = i_rt | (i_imm << 16);
+      break;
+    case LOAD:
+      this->regs[i_rt] = this->mem[i_rs + (i_imm * 4)];
+      if (!isInsideMem) {
+        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+        exit(1);
+      }
+      break;
+    case STORE:
+      this->mem[i_rs + (i_imm * 4)] = i_rt;
+      if (!isInsideMem) {
+        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+        exit(1);
+      }
+      break;
+
+    case BEQ:
+      if (regs[i_rs] == regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+
+    case BNE:
+      if (regs[i_rs] != regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+
+    case BLT:
+      if (regs[i_rs] < regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+
+    case BGT:
+      if (regs[i_rs] > regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+
+    case BLE:
+      if (regs[i_rs] <= regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+
+    case BGE:
+      if (regs[i_rs] >= regs[i_rt]) {
+        regs[PC] += ((i_imm & 0xFFFF) * 4)
+      }
+      break;
+      
+    default:
+      printf("Unknown opcode: 0x%X\n", opcode);
       exit(1);
-    }
-    break;
-  case STORE:
-    this->mem[i_rs + (i_imm * 4)] = i_rt;
-    if (!isInsideMem) {
-      printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
-      exit(1);
-    }
-    break;
-  default:
-    printf("Unknown opcode: 0x%X\n", opcode);
-    exit(1);
   }
 }
