@@ -42,6 +42,7 @@ void VM::runInstr() {
   uint32_t i_rt = (instr >> 18) & 0xF;
   uint32_t i_rd = (instr >> 14) & 0xF;
   uint32_t i_imm = instr & 0x3FFFF;
+  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions, allowing negative values
 
   this->regs[PC] += 4;
 
@@ -113,7 +114,7 @@ void VM::runInstr() {
 
     case BEQ:
       if (regs[i_rs] == regs[i_rt]) {
-        regs[PC] += ((i_imm & 0xFFFF) * 4)
+        regs[PC] += (offset * 4);
       }
       break;
 
@@ -125,7 +126,7 @@ void VM::runInstr() {
 
     case BLT:
       if (regs[i_rs] < regs[i_rt]) {
-        regs[PC] += ((i_imm & 0xFFFF) * 4)
+        regs[PC] += (offset * 4);
       }
       break;
 
@@ -137,13 +138,13 @@ void VM::runInstr() {
 
     case BLE:
       if (regs[i_rs] <= regs[i_rt]) {
-        regs[PC] += ((i_imm & 0xFFFF) * 4)
+        regs[PC] += (offset * 4);
       }
       break;
 
     case BGE:
       if (regs[i_rs] >= regs[i_rt]) {
-        regs[PC] += ((i_imm & 0xFFFF) * 4)
+        regs[PC] += (offset * 4);
       }
       break;
       
