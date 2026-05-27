@@ -54,6 +54,7 @@ void VM::runInstr() {
   uint32_t i_rd = (instr >> 14) & 0xF;
   uint32_t i_imm = instr & 0x3FFFF;
   int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions, allowing negative values
+  uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
 
   this->regs[PC] += 4;
 
@@ -158,7 +159,29 @@ void VM::runInstr() {
         this->regs[PC] += (offset * 4);
       }
       break;
-      
+
+    case JMP:
+      if (!isInsideMem(target_addr26)) {
+        printf("Invalid jump address: 0x%X\n", target_addr26);
+        exit(1);
+      }
+      this->regs[PC] = target_addr26;
+      break;
+
+    case CALL:
+      if (!isInsideMem(target_addr26)) {
+        printf("Invalid call address: 0x%X\n", target_addr26);
+        exit(1);
+      }
+      if (this->regs[SP] <= 0x0FFEFFF) {
+        printf("Stack Overflow\n");
+        exit(1);
+      }
+      this->regs[SP] -= 4;
+      writeMem(this->regs[SP], this->regs[PC]);
+      this->regs[PC] = target_addr26;
+      break;
+
     default:
       printf("Unknown opcode: 0x%X\n", opcode);
       exit(1);
