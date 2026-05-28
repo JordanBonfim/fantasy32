@@ -110,20 +110,24 @@ void VM::runInstr() {
     case MOVH:
       this->regs[i_rt] = i_rt | (i_imm << 16);
       break;
-    case LOAD:
-      this->regs[i_rt] = this->mem[i_rs + (i_imm * 4)];
-      if (!isInsideMem) {
-        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+    case LOAD: {
+      uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+      if (!isInsideMem(addr)) {
+        printf("Memory access out of bounds: 0x%X\n", addr);
         exit(1);
       }
+      this->regs[i_rt] = readMem(addr);
       break;
-    case STORE:
-      this->mem[i_rs + (i_imm * 4)] = i_rt;
-      if (!isInsideMem) {
-        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
+    }
+    case STORE: {
+      uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+      if (!isInsideMem(addr)) {
+        printf("Memory access out of bounds: 0x%X\n", addr);
         exit(1);
       }
+      writeMem(addr, this->regs[i_rt]);
       break;
+    }
 
     // BRANCH INSTRUCTIONS (type I)
     case BEQ:
