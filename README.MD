@@ -43,7 +43,7 @@ Depois de subir o container, lembre de abrir o Docker Desktop e garantir que o c
 - `src/vm/`: implementação da máquina virtual.
 - `src/game/`: arquivos relacionados ao jogo executado na VM.
 - `src/utils/`: utilitários e helpers do projeto.
-- `main.cpp`: ponto de entrada principal do projeto.
+- `src/main.cpp`: ponto de entrada principal do projeto.
 
 ## Observações
 
