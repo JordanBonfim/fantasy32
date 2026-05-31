@@ -45,7 +45,7 @@ void VM::load(char *arqBin) {
 }
 
 void VM::runInstr() {
-  int32_t pc = this->regs[PC];
+  int32_t &pc = this->regs[PC];
   uint32_t instr = readMem(pc);
   uint32_t opcode = instr >> 26;
 
@@ -53,175 +53,179 @@ void VM::runInstr() {
   uint32_t i_rt = (instr >> 18) & 0xF;
   uint32_t i_rd = (instr >> 14) & 0xF;
   uint32_t i_imm = instr & 0x3FFFF;
-  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions, allowing negative values
-  uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
+  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions,
+                                              // allowing negative values
   uint32_t u_rd = (instr >> 22) & 0xF;
 
-  this->regs[PC] += 4;
+  pc += 4;
 
   switch (opcode) {
-    // Arithmetic and logical instructions (type R, except for ADDI)
-    case ADD:
-      this->regs[i_rd] = this->regs[i_rs] + this->regs[i_rt];
-      break;
-    case SUB:
-      this->regs[i_rd] = this->regs[i_rs] - this->regs[i_rt];
-      break;
-    case MUL:
-      this->regs[i_rd] = this->regs[i_rs] * this->regs[i_rt];
-      break;
-    case DIV:
-      this->regs[i_rd] = this->regs[i_rs] / this->regs[i_rt];
-      break;
-    case MOD:
-      this->regs[i_rd] = this->regs[i_rs] % this->regs[i_rt];
-      break;
-    case AND:
-      this->regs[i_rd] = this->regs[i_rs] & this->regs[i_rt];
-      break;
-    case OR:
-      this->regs[i_rd] = this->regs[i_rs] | this->regs[i_rt];
-      break;
-    case XOR:
-      this->regs[i_rd] = this->regs[i_rs] ^ this->regs[i_rt];
-      break;
-    case SHL:
-      this->regs[i_rd] = this->regs[i_rs] << (this->regs[i_rt] & 0x1F);
-      break;
-    case SHR:
-      this->regs[i_rd] = this->regs[i_rs] >> (this->regs[i_rt] & 0x1F);
-      break;
-    case ROL:
-      this->regs[i_rd] = (this->regs[i_rs] << (this->regs[i_rt] & 0x1F)) |
-                         (this->regs[i_rs] >> (32 - (this->regs[i_rt] & 0x1F)));
-      break;
-    case ROR:
-      this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
-                         (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
-      break;
-    case ADDI:  // Type I
-      this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
-      break;
+  // Arithmetic and logical instructions (type R, except for ADDI)
+  case ADD:
+    this->regs[i_rd] = this->regs[i_rs] + this->regs[i_rt];
+    break;
+  case SUB:
+    this->regs[i_rd] = this->regs[i_rs] - this->regs[i_rt];
+    break;
+  case MUL:
+    this->regs[i_rd] = this->regs[i_rs] * this->regs[i_rt];
+    break;
+  case DIV:
+    this->regs[i_rd] = this->regs[i_rs] / this->regs[i_rt];
+    break;
+  case MOD:
+    this->regs[i_rd] = this->regs[i_rs] % this->regs[i_rt];
+    break;
+  case AND:
+    this->regs[i_rd] = this->regs[i_rs] & this->regs[i_rt];
+    break;
+  case OR:
+    this->regs[i_rd] = this->regs[i_rs] | this->regs[i_rt];
+    break;
+  case XOR:
+    this->regs[i_rd] = this->regs[i_rs] ^ this->regs[i_rt];
+    break;
+  case SHL:
+    this->regs[i_rd] = this->regs[i_rs] << (this->regs[i_rt] & 0x1F);
+    break;
+  case SHR:
+    this->regs[i_rd] = this->regs[i_rs] >> (this->regs[i_rt] & 0x1F);
+    break;
+  case ROL:
+    this->regs[i_rd] = (this->regs[i_rs] << (this->regs[i_rt] & 0x1F)) |
+                       (this->regs[i_rs] >> (32 - (this->regs[i_rt] & 0x1F)));
+    break;
+  case ROR:
+    this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
+                       (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
+    break;
+  case ADDI: // Type I
+    this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
+    break;
 
-    // Memory movement instructions (type I)
-    case MOVL:
-      this->regs[i_rt] = (i_imm & 0xFFFF);
-      break;
-    case MOVH:
-      this->regs[i_rt] = i_rt | (i_imm << 16);
-      break;
-    case LOAD:
-      this->regs[i_rt] = this->mem[i_rs + (i_imm * 4)];
-      if (!isInsideMem) {
-        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
-        exit(1);
-      }
-      break;
-    case STORE:
-      this->mem[i_rs + (i_imm * 4)] = i_rt;
-      if (!isInsideMem) {
-        printf("Memory access out of bounds: 0x%X\n", i_rs + (i_imm * 4));
-        exit(1);
-      }
-      break;
-
-    // BRANCH INSTRUCTIONS (type I)
-    case BEQ:
-      if (this->regs[i_rs] == regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    case BNE:
-      if (this->regs[i_rs] != this->regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    case BLT:
-      if (this->regs[i_rs] < this->regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    case BGT:
-      if (this->regs[i_rs] > this->regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    case BLE:
-      if (this->regs[i_rs] <= this->regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    case BGE:
-      if (this->regs[i_rs] >= this->regs[i_rt]) {
-        this->regs[PC] += (offset * 4);
-      }
-      break;
-
-    // JUMP INSTRUCTIONS (type J)
-    case JMP:
-      if (!isInsideMem(target_addr26)) {
-        printf("Invalid jump address: 0x%X\n", target_addr26);
-        exit(1);
-      }
-      this->regs[PC] = target_addr26;
-      break;
-
-    case CALL:
-      if (!isInsideMem(target_addr26)) {
-        printf("Invalid call address: 0x%X\n", target_addr26);
-        exit(1);
-      }
-      if (this->regs[SP] <= 0x0FFEFFF) {
-        printf("Stack Overflow\n");
-        exit(1);
-      }
-      this->regs[SP] -= 4;
-      writeMem(this->regs[SP], this->regs[PC]);
-      this->regs[PC] = target_addr26;
-      break;
-
-    // UNARY AND STACK INSTRUCTIONS (type U)
-    case PUSH:
-      if (this->regs[SP] <= 0x0FFEFFF) {
-        printf("Stack Overflow\n");
-        exit(1);
-      }
-      this->regs[SP] -= 4;
-      writeMem(this->regs[SP], this->regs[u_rd]);
-      break;
-
-    case POP:
-      if (this->regs[SP] >= 0x00FFFFFF) {
-        printf("Stack Underflow\n");
-        exit(1);
-      }
-      this->regs[u_rd] = readMem(this->regs[SP]);
-      this->regs[SP] += 4;
-      break;
-    case INC:
-      this->regs[u_rd]++;
-      break;
-    case DEC:
-      this->regs[u_rd]--;
-      break;
-    case NOT:
-      this->regs[u_rd] = ~this->regs[u_rd];
-      break;
-    case RET:
-      if (this->regs[SP] >= 0x00FFFFFF) {
-        printf("Stack Underflow\n");
-        exit(1);
-      }
-      this->regs[PC] = readMem(this->regs[SP]);
-      this->regs[SP] += 4;
-      break;
-    default:
-      printf("Unknown opcode: 0x%X\n", opcode);
+  // Memory movement instructions (type I)
+  case MOVL:
+    this->regs[i_rt] = (i_imm & 0xFFFF);
+    break;
+  case MOVH:
+    this->regs[i_rt] = this->regs[i_rt] | (i_imm << 16);
+    break;
+  case LOAD:
+    uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+    if (!isInsideMem(addr)) {
+      printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
+    }
+    this->regs[i_rt] = this->mem[addr];
+    break;
+  case STORE:
+    uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+    if (!isInsideMem(addr)) {
+      printf("Memory access out of bounds: 0x%X\n", addr);
+      exit(1);
+    }
+    this->mem[addr] = this->regs[i_rt];
+    break;
+
+  // BRANCH INSTRUCTIONS (type I)
+  case BEQ:
+    if (this->regs[i_rs] == regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  case BNE:
+    if (this->regs[i_rs] != this->regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  case BLT:
+    if (this->regs[i_rs] < this->regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  case BGT:
+    if (this->regs[i_rs] > this->regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  case BLE:
+    if (this->regs[i_rs] <= this->regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  case BGE:
+    if (this->regs[i_rs] >= this->regs[i_rt]) {
+      pc += (offset * 4);
+    }
+    break;
+
+  // JUMP INSTRUCTIONS (type J)
+  case JMP:
+    uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
+    if (!isInsideMem(target_addr26)) {
+      printf("Invalid jump address: 0x%X\n", target_addr26);
+      exit(1);
+    }
+    pc = target_addr26;
+    break;
+
+  case CALL:
+    uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
+    if (!isInsideMem(target_addr26)) {
+      printf("Invalid call address: 0x%X\n", target_addr26);
+      exit(1);
+    }
+    if (this->regs[SP] <= 0x0FFEFFF) {
+      printf("Stack Overflow\n");
+      exit(1);
+    }
+    this->regs[SP] -= 4;
+    writeMem(this->regs[SP], pc);
+    pc = target_addr26;
+    break;
+
+  // UNARY AND STACK INSTRUCTIONS (type U)
+  case PUSH:
+    if (this->regs[SP] <= 0x0FFEFFF) {
+      printf("Stack Overflow\n");
+      exit(1);
+    }
+    this->regs[SP] -= 4;
+    writeMem(this->regs[SP], this->regs[u_rd]);
+    break;
+
+  case POP:
+    if (this->regs[SP] >= 0x00FFFFFF) {
+      printf("Stack Underflow\n");
+      exit(1);
+    }
+    this->regs[u_rd] = readMem(this->regs[SP]);
+    this->regs[SP] += 4;
+    break;
+  case INC:
+    this->regs[u_rd]++;
+    break;
+  case DEC:
+    this->regs[u_rd]--;
+    break;
+  case NOT:
+    this->regs[u_rd] = ~this->regs[u_rd];
+    break;
+  case RET:
+    if (this->regs[SP] >= 0x00FFFFFF) {
+      printf("Stack Underflow\n");
+      exit(1);
+    }
+    pc = readMem(this->regs[SP]);
+    this->regs[SP] += 4;
+    break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
   }
 }

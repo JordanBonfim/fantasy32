@@ -18,10 +18,11 @@ private:
   uint8_t *mem;
   uint32_t readMem(uint32_t addr);
   bool writeMem(uint32_t addr, uint32_t value);
+  void decode(uint32_t instr, uint32_t op, uint32_t &rs, uint32_t &rt, uint32_t &rd, uint32_t &imm, int32_t &offset, uint32_t &addr);
 
 public:
   VM();
   ~VM();
   void load(char *arqBin);
-  void runInstr();
+  void runInstr() __attribute__((hot));
 };
