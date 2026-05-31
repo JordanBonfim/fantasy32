@@ -9,6 +9,7 @@ VM::VM() {
   this->mem = new uint8_t[S_MEM];
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
+  this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
 }
 
 VM::~VM() { delete[] this->mem; }
@@ -44,20 +45,46 @@ void VM::load(char *arqBin) {
   fclose(bin);
 }
 
-void VM::runInstr() {
-  int32_t &pc = this->regs[PC];
-  uint32_t instr = readMem(pc);
+bool VM::runInstr() {
+  uint32_t instr = readMem(this->regs[PC]);
   uint32_t opcode = instr >> 26;
 
+  this->regs[PC] += 4;
+
+  printf("PC: 0x%08X, Instruction: 0x%08X, Opcode: 0x%02X\n",
+         this->regs[PC] - 4, instr, opcode);
+
+  if (opcode == HALT) {
+    return false;
+  }
+
+  if (opcode <= 0x0B) {
+    this->execTypeR(instr, opcode);
+  } else if (opcode <= 0x16) {
+    this->execTypeI(instr, opcode);
+  } else if (opcode <= 0x18) {
+    this->execTypeJ(instr, opcode);
+  } else if (opcode <= 0x1E) {
+    this->execTypeU(instr, opcode);
+  } else if (opcode <= 0x2B) {
+    this->execTypeS(instr, opcode);
+  } else {
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+
+  return true;
+}
+
+void VM::run() {
+  while (this->runInstr()) {
+  }
+}
+
+void VM::execTypeR(uint32_t instr, uint32_t opcode) {
   uint32_t i_rs = (instr >> 22) & 0xF;
   uint32_t i_rt = (instr >> 18) & 0xF;
   uint32_t i_rd = (instr >> 14) & 0xF;
-  uint32_t i_imm = instr & 0x3FFFF;
-  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions,
-                                              // allowing negative values
-  uint32_t u_rd = (instr >> 22) & 0xF;
-
-  pc += 4;
 
   switch (opcode) {
   // Arithmetic and logical instructions (type R, except for ADDI)
@@ -99,6 +126,22 @@ void VM::runInstr() {
     this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
                        (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
     break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
+
+void VM::execTypeI(uint32_t instr, uint32_t opcode) {
+  int32_t &pc = this->regs[PC];
+
+  uint32_t i_rs = (instr >> 22) & 0xF;
+  uint32_t i_rt = (instr >> 18) & 0xF;
+  uint32_t i_imm = instr & 0x3FFFF;
+  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions,
+                                              // allowing negative values
+
+  switch (opcode) {
   case ADDI: // Type I
     this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
     break;
@@ -110,7 +153,7 @@ void VM::runInstr() {
   case MOVH:
     this->regs[i_rt] = this->regs[i_rt] | (i_imm << 16);
     break;
-  case LOAD:
+  case LOAD: {
     uint32_t addr = this->regs[i_rs] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
@@ -118,7 +161,8 @@ void VM::runInstr() {
     }
     this->regs[i_rt] = this->mem[addr];
     break;
-  case STORE:
+  }
+  case STORE: {
     uint32_t addr = this->regs[i_rs] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
@@ -126,6 +170,7 @@ void VM::runInstr() {
     }
     this->mem[addr] = this->regs[i_rt];
     break;
+  }
 
   // BRANCH INSTRUCTIONS (type I)
   case BEQ:
@@ -163,9 +208,17 @@ void VM::runInstr() {
       pc += (offset * 4);
     }
     break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
 
-  // JUMP INSTRUCTIONS (type J)
-  case JMP:
+void VM::execTypeJ(uint32_t instr, uint32_t opcode) {
+  int32_t &pc = this->regs[PC];
+
+  switch (opcode) {
+  case JMP: {
     uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
     if (!isInsideMem(target_addr26)) {
       printf("Invalid jump address: 0x%X\n", target_addr26);
@@ -173,8 +226,9 @@ void VM::runInstr() {
     }
     pc = target_addr26;
     break;
+  }
 
-  case CALL:
+  case CALL: {
     uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
     if (!isInsideMem(target_addr26)) {
       printf("Invalid call address: 0x%X\n", target_addr26);
@@ -188,8 +242,17 @@ void VM::runInstr() {
     writeMem(this->regs[SP], pc);
     pc = target_addr26;
     break;
+  }
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
 
-  // UNARY AND STACK INSTRUCTIONS (type U)
+void VM::execTypeU(uint32_t instr, uint32_t opcode) {
+  uint32_t u_rd = (instr >> 22) & 0xF;
+
+  switch (opcode) {
   case PUSH:
     if (this->regs[SP] <= 0x0FFEFFF) {
       printf("Stack Overflow\n");
@@ -221,9 +284,90 @@ void VM::runInstr() {
       printf("Stack Underflow\n");
       exit(1);
     }
-    pc = readMem(this->regs[SP]);
+    this->regs[PC] = readMem(this->regs[SP]);
     this->regs[SP] += 4;
     break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
+
+void VM::execTypeS(uint32_t instr, uint32_t opcode) {
+
+  uint32_t i_ra = (instr >> 22) & 0xF;
+  uint32_t i_rb = (instr >> 18) & 0xF;
+  uint32_t i_rc = (instr >> 14) & 0xF;
+  uint32_t i_rd = (instr >> 10) & 0xF;
+  uint32_t i_re = (instr >> 6) & 0xF;
+
+  uint8_t *base = this->mem + this->videoMemStart;
+
+  switch (opcode) {
+  case RECT: {
+    const uint32_t ra = this->regs[i_ra];
+    const uint32_t rb = this->regs[i_rb];
+    uint32_t rc = this->regs[i_rc];
+    uint32_t rd = this->regs[i_rd];
+
+    const uint32_t w = this->w;
+    const uint32_t h = this->h;
+
+    if (ra >= w || rb >= h) {
+      printf("Invalid rectangle origin coordinates: (%u, %u)\n", ra, rb);
+      exit(1);
+    }
+
+    // truncate width
+    if (rc > w - ra) {
+      rc = w - ra;
+      this->regs[i_rc] = rc;
+    }
+
+    // truncate height
+    if (rd > h - rb) {
+      rd = h - rb;
+      this->regs[i_rd] = rd;
+    }
+    for (uint32_t i = 0; i < rd; i++) {
+      // const uint32_t offset = ((rb + i) * w + ra) * 4;
+      memset(base + (((rb + i) * w + ra) * 4), this->regs[i_re], rc * 4);
+    }
+
+    break;
+  }
+  case HALT:
+    break;
+  case CLEAR: {
+    memset(base, this->regs[i_ra],
+           (this->videoMemEnd - this->videoMemStart) + 1);
+    break;
+  }
+
+  // case DSPRITE:
+  //
+
+  //
+  // case GKEY:
+  //
+  // case PLAY:
+  //
+  // case SLEEP:
+  //
+  // case PSTR:
+  //
+  // case PINT:
+  //
+  // case SYSCALL:
+  //
+  // case SRAND:
+  //
+  // case RAND:
+  //
+  // case FRAMENUM:
+  //
+  // case HALT:
+  //
   default:
     printf("Unknown opcode: 0x%X\n", opcode);
     exit(1);

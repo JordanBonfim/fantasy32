@@ -1,0 +1,19 @@
+typedef enum {
+  ARROW_LEFT = 0x00,
+  ARROW_RIGHT = 0x01,
+  ARROW_UP = 0x02,
+  ARROW_DOWN = 0x03,
+  SPACE = 0x04,
+  ENTER = 0x05,
+  KEY_N = 0x06,
+  KEY_M = 0x07,
+  KEY_A = 0x08,
+  KEY_S = 0x09,
+  KEY_D = 0x0A,
+  KEY_W = 0x0B,
+  KEY_Q = 0x0C,
+  KEY_E = 0x0D,
+  KEY_C = 0x0E,
+  KEY_V = 0x0F,
+
+} KeyCode;

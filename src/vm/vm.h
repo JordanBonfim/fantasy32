@@ -7,22 +7,32 @@
 #pragma once
 #include <stdint.h>
 
-#define S_MEM 1024
+#define S_MEM (16 * 1024 * 1024)
 #define SP 14
 #define PC 15
-
 
 class VM {
 private:
   int32_t regs[16];
   uint8_t *mem;
+  // start and end of the video memory
+  uint32_t videoMemStart = 0x00FB4000;
+  uint32_t videoMemEnd = 0x00FFEFFF;
+  // screen dimensions
+  uint32_t w = 320;
+  uint32_t h = 240;
   uint32_t readMem(uint32_t addr);
   bool writeMem(uint32_t addr, uint32_t value);
-  void decode(uint32_t instr, uint32_t op, uint32_t &rs, uint32_t &rt, uint32_t &rd, uint32_t &imm, int32_t &offset, uint32_t &addr);
+  void execTypeR(uint32_t instr, uint32_t opcode);
+  void execTypeI(uint32_t instr, uint32_t opcode);
+  void execTypeJ(uint32_t instr, uint32_t opcode);
+  void execTypeU(uint32_t instr, uint32_t opcode);
+  void execTypeS(uint32_t instr, uint32_t opcode);
 
 public:
   VM();
   ~VM();
   void load(char *arqBin);
-  void runInstr() __attribute__((hot));
+  void run();
+  bool runInstr();
 };

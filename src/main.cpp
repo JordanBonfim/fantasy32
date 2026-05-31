@@ -1,18 +1,12 @@
 #include "vm/vm.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-void hotReload() {
-  while (1) {
-    sleep(999);
-  }
-}
-int main() {
+int main(int argc, char **argv) {
+  char *programPath = (argc >= 2) ? argv[1] : (char *)"src/assembler/prog1.bin";
+
   VM vm;
-
-  printf("testando o hot reload\n");
-
-  hotReload();
+  vm.load(programPath);
+  vm.run();
   return 0;
 }
