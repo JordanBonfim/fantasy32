@@ -1,18 +1,37 @@
-FROM alpine:3.19 AS builder
-WORKDIR /app
-RUN apk add --no-cache build-base coreutils
+FROM debian:12 AS builder
 
-# Copy only files needed for build to leverage cache
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        coreutils \
+        make && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY Makefile .
 COPY src/ src/
 
-RUN make -j$(nproc)
+RUN make -j"$(nproc)"
 
-FROM alpine:3.19 AS runtime
+FROM debian:12 AS runtime
+
 WORKDIR /app
-RUN apk add --no-cache libstdc++
-RUN addgroup -S app && adduser -S -G app app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libstdc++6 \
+        libsdl2-2.0-0 \
+        libsdl2-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r app && \
+    useradd -r -g app -d /app -s /usr/sbin/nologin app
+
 COPY --from=builder /app/build/app ./app
+
 RUN chown app:app ./app
+
 USER app
+
 CMD ["./app"]

@@ -1,9 +1,11 @@
 #include "vm.h"
 #include "../util/util.cpp"
 #include "opcodes.h"
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
@@ -53,11 +55,6 @@ bool VM::runInstr() {
 
   printf("PC: 0x%08X, Instruction: 0x%08X, Opcode: 0x%02X\n",
          this->regs[PC] - 4, instr, opcode);
-
-  if (opcode == HALT) {
-    return false;
-  }
-
   if (opcode <= 0x0B) {
     this->execTypeR(instr, opcode);
   } else if (opcode <= 0x16) {
@@ -77,7 +74,34 @@ bool VM::runInstr() {
 }
 
 void VM::run() {
-  while (this->runInstr()) {
+  uint32_t sTime = SDL_GetTicks();
+
+  // 1. Processar Eventos (Integração SDL_PollEvent)
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    if (event.type == SDL_QUIT)
+      // vm_rodando = false;
+
+      // Atualiza o estado interno do teclado da VM
+      keyboard.handleEvent(event);
+  }
+
+  // 2. Executar Ciclo de Instruções
+  // O manual exige 104 instruções por frame [1]
+  for (int i = 0; i < 104; i++) {
+    runInstr();
+  }
+
+  // 3. Atualizar Tela
+  this->render();
+
+  // 4. Controle de Tempo (Manter FPS constante)
+  // elapsed time since the start of the frame
+  // frametime
+  uint32_t eTime = SDL_GetTicks() - sTime;
+  uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
+  if (eTime < fTime) {
+    SDL_Delay(fTime - eTime); // Aguarda o tempo restante para o próximo frame
   }
 }
 
@@ -336,40 +360,67 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
 
     break;
   }
-  case HALT:
-    break;
+
+    // case DSPRITE:
+
   case CLEAR: {
     memset(base, this->regs[i_ra],
            (this->videoMemEnd - this->videoMemStart) + 1);
     break;
   }
 
-  // case DSPRITE:
-  //
+  case GKEY: {
+    this->regs[i_ra] = keyboard.isKeyPressed(this->regs[i_rb]) ? 1 : 0;
+    break;
+  }
 
-  //
-  // case GKEY:
-  //
-  // case PLAY:
-  //
-  // case SLEEP:
-  //
+    // case PLAY:
+
+  case SLEEP: {
+    uint32_t ms = this->regs[i_ra];
+    sleep(ms / 1000); // unix sleep takes seconds, so convert from ms to s :)
+    break;
+  }
+
   // case PSTR:
   //
   // case PINT:
   //
   // case SYSCALL:
   //
-  // case SRAND:
-  //
-  // case RAND:
-  //
-  // case FRAMENUM:
-  //
-  // case HALT:
-  //
+  case SRAND: {
+    srand(this->regs[i_ra]);
+    break;
+  }
+
+  case RAND: {
+    this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
+    break;
+  }
+    //
+    // case FRAMENUM:
+    //
+  case HALT: {
+    break;
+  }
   default:
     printf("Unknown opcode: 0x%X\n", opcode);
-    exit(1);
+    break;
+    //exit(1);
+  }
+}
+
+void VM::render() {
+  // For now, this is just a placeholder. The actual rendering logic will depend
+  // on how you want to display the video memory.
+  // You can use SDL to create a window and render the contents of the video
+  // memory as pixels.
+  printf("Render called. Video memory from 0x%08X to 0x%08X\n", videoMemStart,
+         videoMemEnd);
+}
+void VM::printRegs() {
+  printf("Registers:\n");
+  for (int i = 0; i < 16; i++) {
+    printf("R%d: 0x%08X\n", i, this->regs[i]);
   }
 }

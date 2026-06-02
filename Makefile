@@ -1,5 +1,8 @@
+SDL_CFLAGS := $(shell sdl2-config --cflags)
+SDL_LIBS   := $(shell sdl2-config --libs)
+
 CXX      := g++
-CXXFLAGS := -std=c++17 -Wall -O0 -g -MMD -MP
+CXXFLAGS := -std=c++17 -Wall -O0 -g -MMD -MP $(SDL_CFLAGS)
 INCLUDES := -Isrc/vm -Isrc/game -Isrc/utils
 SRC_DIRS := src/vm src/game src/utils
 BUILD_DIR := build
@@ -18,10 +21,10 @@ run: $(TARGET)
 	$(TARGET) $(BIN)
 
 $(TARGET): $(OBJS)
-	$(CXX) $^ -o $@
+	$(CXX) $^ -o $@ $(SDL_LIBS)
 
 $(BUILD_DIR)/%.o: %.cpp
-	mkdir -p $(dir $@)        
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 -include $(DEPS)

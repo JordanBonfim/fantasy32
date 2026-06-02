@@ -1,10 +1,5 @@
-
-
-// void VM_init(VM *vm);
-// void VM_load(VM *vm, char *arqBin);
-// void VM_runInstr(VM *vm);
-
 #pragma once
+#include "keyboard.h"
 #include <stdint.h>
 
 #define S_MEM (16 * 1024 * 1024)
@@ -18,6 +13,8 @@ private:
   // start and end of the video memory
   uint32_t videoMemStart = 0x00FB4000;
   uint32_t videoMemEnd = 0x00FFEFFF;
+
+  uint8_t FPS = 60;
   // screen dimensions
   uint32_t w = 320;
   uint32_t h = 240;
@@ -28,11 +25,15 @@ private:
   void execTypeJ(uint32_t instr, uint32_t opcode);
   void execTypeU(uint32_t instr, uint32_t opcode);
   void execTypeS(uint32_t instr, uint32_t opcode);
+  Keyboard keyboard;
 
 public:
   VM();
   ~VM();
   void load(char *arqBin);
   void run();
-  bool runInstr();
+  bool runInstr() __attribute__((hot));
+  void render();
+  void printRegs();
+  
 };
