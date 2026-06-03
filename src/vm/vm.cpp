@@ -98,16 +98,15 @@ void VM::run() {
   }
 
   // não tenho ideia de como fazer isso
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 15; i++) {
     runInstr();
-    sleep(2); // Pequena pausa para evitar uso excessivo da CPU
   }
 
   this->render();
+  sleep(2);
 
   // elapsed time since the start of the frame
   // frametime
-
   // o controle de tempo parece ser obrigatório para manter o 60 fps
 
   uint32_t eTime = SDL_GetTicks() - sTime;
@@ -337,7 +336,8 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   uint32_t i_rd = (instr >> 10) & 0xF;
   uint32_t i_re = (instr >> 6) & 0xF;
 
-  uint8_t *base = this->mem + this->videoMemStart;
+  uint32_t *base =
+      reinterpret_cast<uint32_t *>(this->mem + this->videoMemStart);
 
   switch (opcode) {
   case RECT: {
@@ -353,6 +353,9 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
       printf("Invalid rectangle origin coordinates: (%u, %u)\n", ra, rb);
       exit(1);
     }
+    // printar todos as dimensões
+    printf("Drawing rectangle at (%u, %u) with width %u and height %u\n", ra,
+           rb, rc, rd);
 
     // truncate width
     if (rc > w - ra) {
@@ -366,8 +369,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
       this->regs[i_rd] = rd;
     }
     for (uint32_t i = 0; i < rd; i++) {
-      // const uint32_t offset = ((rb + i) * w + ra) * 4;
-      memset(base + (((rb + i) * w + ra) * 4), this->regs[i_re], rc * 4);
+      uint32_t *row = base + ((rb + i) * w + ra);
+      for (uint32_t j = 0; j < rc; j++) {
+        row[j] = this->regs[i_re];
+      }
     }
 
     break;
@@ -376,8 +381,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     // case DSPRITE:
 
   case CLEAR: {
-    memset(base, this->regs[i_ra],
-           (this->videoMemEnd - this->videoMemStart) + 1);
+    const uint32_t pixelCount = this->w * this->h;
+    for (uint32_t i = 0; i < pixelCount; i++) {
+      base[i] = this->regs[i_ra];
+    }
     break;
   }
 
