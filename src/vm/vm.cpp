@@ -12,6 +12,16 @@ VM::VM() {
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
   this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
+
+  // Usando o sdl para cria um janela, cria e criar uma textura, e nela
+  // renderizar os pixels da memória de vídeo
+  SDL_Init(SDL_INIT_VIDEO);
+  window = SDL_CreateWindow("Fantasys32", SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED, w * scale, h * scale,
+                            SDL_WINDOW_SHOWN);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+                              SDL_TEXTUREACCESS_STREAMING, w, h);
 }
 
 VM::~VM() { delete[] this->mem; }
@@ -47,14 +57,12 @@ void VM::load(char *arqBin) {
   fclose(bin);
 }
 
-bool VM::runInstr() {
+void VM::runInstr() {
   uint32_t instr = readMem(this->regs[PC]);
   uint32_t opcode = instr >> 26;
 
   this->regs[PC] += 4;
 
-  printf("PC: 0x%08X, Instruction: 0x%08X, Opcode: 0x%02X\n",
-         this->regs[PC] - 4, instr, opcode);
   if (opcode <= 0x0B) {
     this->execTypeR(instr, opcode);
   } else if (opcode <= 0x16) {
@@ -69,35 +77,39 @@ bool VM::runInstr() {
     printf("Unknown opcode: 0x%X\n", opcode);
     exit(1);
   }
-
-  return true;
 }
 
 void VM::run() {
+  if (!this->running) {
+    printf("Shutting down ZZZZZ.\n");
+    return;
+  }
+
   uint32_t sTime = SDL_GetTicks();
 
-  // 1. Processar Eventos (Integração SDL_PollEvent)
+  // Processar Eventos (No nosso caso é basicamente o teclado)
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT)
-      // vm_rodando = false;
+      this->running = false;
 
-      // Atualiza o estado interno do teclado da VM
-      keyboard.handleEvent(event);
+    // Atualiza o estado interno do teclado da VM
+    keyboard.handleEvent(event);
   }
 
-  // 2. Executar Ciclo de Instruções
-  // O manual exige 104 instruções por frame [1]
-  for (int i = 0; i < 104; i++) {
+  // não tenho ideia de como fazer isso
+  for (int i = 0; i < 10; i++) {
     runInstr();
+    sleep(2); // Pequena pausa para evitar uso excessivo da CPU
   }
 
-  // 3. Atualizar Tela
   this->render();
 
-  // 4. Controle de Tempo (Manter FPS constante)
   // elapsed time since the start of the frame
   // frametime
+
+  // o controle de tempo parece ser obrigatório para manter o 60 fps
+
   uint32_t eTime = SDL_GetTicks() - sTime;
   uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
   if (eTime < fTime) {
@@ -401,22 +413,26 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     // case FRAMENUM:
     //
   case HALT: {
+    this->running = false;
     break;
   }
   default:
     printf("Unknown opcode: 0x%X\n", opcode);
     break;
-    //exit(1);
+    // exit(1);
   }
 }
 
 void VM::render() {
-  // For now, this is just a placeholder. The actual rendering logic will depend
-  // on how you want to display the video memory.
-  // You can use SDL to create a window and render the contents of the video
-  // memory as pixels.
-  printf("Render called. Video memory from 0x%08X to 0x%08X\n", videoMemStart,
-         videoMemEnd);
+  uint8_t *pixelData = &mem[videoMemStart];
+
+  SDL_UpdateTexture(texture, nullptr, pixelData, w * sizeof(uint32_t));
+
+  SDL_RenderClear(renderer);
+
+  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+
+  SDL_RenderPresent(renderer);
 }
 void VM::printRegs() {
   printf("Registers:\n");

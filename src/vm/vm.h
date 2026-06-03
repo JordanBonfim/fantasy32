@@ -8,6 +8,9 @@
 
 class VM {
 private:
+  // running state
+  bool running = true;
+
   int32_t regs[16];
   uint8_t *mem;
   // start and end of the video memory
@@ -15,9 +18,6 @@ private:
   uint32_t videoMemEnd = 0x00FFEFFF;
 
   uint8_t FPS = 60;
-  // screen dimensions
-  uint32_t w = 320;
-  uint32_t h = 240;
   uint32_t readMem(uint32_t addr);
   bool writeMem(uint32_t addr, uint32_t value);
   void execTypeR(uint32_t instr, uint32_t opcode);
@@ -25,15 +25,26 @@ private:
   void execTypeJ(uint32_t instr, uint32_t opcode);
   void execTypeU(uint32_t instr, uint32_t opcode);
   void execTypeS(uint32_t instr, uint32_t opcode);
+
+  // IO
   Keyboard keyboard;
+
+  // screen dimensions
+  uint32_t w = 320;
+  uint32_t h = 240;
+
+  SDL_Window *window = nullptr;
+  SDL_Renderer *renderer = nullptr;
+  SDL_Texture *texture = nullptr;
+  int scale = 1; // Fator de escala padrão [6]
 
 public:
   VM();
   ~VM();
   void load(char *arqBin);
   void run();
-  bool runInstr() __attribute__((hot));
+  void runInstr() __attribute__((hot));
   void render();
   void printRegs();
-  
+  void initGraphics(int windowScale);
 };
