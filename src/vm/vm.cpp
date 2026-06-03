@@ -353,9 +353,6 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
       printf("Invalid rectangle origin coordinates: (%u, %u)\n", ra, rb);
       exit(1);
     }
-    // printar todos as dimensões
-    printf("Drawing rectangle at (%u, %u) with width %u and height %u\n", ra,
-           rb, rc, rd);
 
     // truncate width
     if (rc > w - ra) {
