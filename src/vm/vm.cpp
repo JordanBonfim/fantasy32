@@ -91,20 +91,18 @@ void VM::run() {
   // Processar Eventos (No nosso caso é basicamente o teclado)
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT)
-      this->running = false;
-
+    if (event.type == SDL_QUIT) this->running = false;
     // Atualiza o estado interno do teclado da VM
     keyboard.handleEvent(event);
   }
 
-  // não tenho ideia de como fazer isso
-  for (int i = 0; i < 15; i++) {
+  int instrsPerFrame = 1000; // Número de instruções a executar por frame 
+  for (int i = 0; i < instrsPerFrame && this->running; i++) {
     runInstr();
   }
 
   this->render();
-  sleep(2);
+  sleep(3); // Ajuda pra testar, no momento, sem isso fecha muito rápido 
 
   // elapsed time since the start of the frame
   // frametime
