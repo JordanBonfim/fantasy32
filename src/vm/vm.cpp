@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "font.h"
+#include <string>
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
@@ -118,6 +119,7 @@ void VM::run() {
   uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
   if (eTime < fTime) {
     SDL_Delay(fTime - eTime); // Aguarda o tempo restante para o próximo frame
+    incFrameNumber();
   }
 }
 
@@ -436,9 +438,12 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
     break;
   }
-    //
-    // case FRAMENUM:
-    //
+    
+  case FRAMENUM:{
+    this->regs[i_ra] = getFrameNumber();
+    break;
+  }
+    
   case HALT: {
     this->halted = true;
     break;

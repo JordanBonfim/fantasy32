@@ -11,6 +11,7 @@ private:
   // running state
   bool running = true;
   bool halted = true;
+  uint32_t frame_number = 0;
 
   int32_t regs[16];
   uint8_t *mem;
@@ -51,4 +52,7 @@ public:
   void initGraphics(int windowScale);
   uint32_t getWidth() const {return w;};
   uint32_t getHeight() const {return h;};
+  void incFrameNumber(){frame_number+=1;};
+  uint32_t getFrameNumber(){return frame_number;};
+
 };
