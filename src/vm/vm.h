@@ -49,4 +49,6 @@ public:
   void render();
   void printRegs();
   void initGraphics(int windowScale);
+  uint32_t getWidth() const {return w;};
+  uint32_t getHeight() const {return h;};
 };

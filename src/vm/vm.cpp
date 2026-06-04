@@ -404,39 +404,27 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case PSTR: {
-    int x = this->regs[i_ra];
-    int y = this->regs[i_rb];
-    char* str = (char*)&this->mem[this->regs[i_rc]];
-    int color = this->regs[i_rd];
-
-    while (*str != '\0') {
-        uint8_t character = (uint8_t)*str;
-        uint64_t characterBitmap = font[character - ' ']; // subtraimos o primeiro caracter
-        uint8_t bytes[8];
-
-        // Extrair os bytes
-        int shift = 56;
-        for (int j = 0; j<8; j++){
-          bytes[j] = ((characterBitmap >> shift) & 0xFF);
-          shift-=8;
-        };
-        
-        // escrever no buffer de video
-        for (int row = 0; row < 8; row++) {
-          uint8_t line = bytes[row];
-          for (int col = 0; col < 8; col++) {
-              if (line & (1 << (7 - col))) {
-                  base[(y + row) * w + (x + col)] = color;
-              }
-          }
-        }
-        x += 8;
-        str++;
-    }
+    drawText(
+      this->regs[i_ra], 
+      this->regs[i_rb], 
+      (char*)&this->mem[this->regs[i_rc]],
+      this->regs[i_rd], 
+      getWidth(), base);
+    break;
   }
 
-  // case PINT:
-  //
+  case PINT: {
+    std::string str = std::to_string(this->regs[i_rc]);
+    const char* text = str.c_str();
+    drawText(
+      this->regs[i_ra], 
+      this->regs[i_rb], 
+      text,
+      this->regs[i_rd], 
+      getWidth(), base);
+    break;
+  }
+  
   // case SYSCALL:
   //
   case SRAND: {
