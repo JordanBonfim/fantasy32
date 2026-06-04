@@ -10,6 +10,7 @@ class VM {
 private:
   // running state
   bool running = true;
+  bool halted = true;
 
   int32_t regs[16];
   uint8_t *mem;
@@ -41,6 +42,7 @@ private:
 public:
   VM();
   ~VM();
+  bool isRunning() const { return running; }
   void load(char *arqBin);
   void run();
   void runInstr() __attribute__((hot));

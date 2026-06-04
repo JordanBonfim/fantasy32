@@ -7,6 +7,9 @@ int main(int argc, char **argv) {
 
   VM vm;
   vm.load(programPath);
-  vm.run();
+  while (vm.isRunning()) {
+    vm.run();
+  }
+  
   return 0;
 }

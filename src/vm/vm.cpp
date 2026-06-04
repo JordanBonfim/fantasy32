@@ -10,6 +10,7 @@
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
+  this->halted = false;
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
   this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
@@ -25,7 +26,13 @@ VM::VM() {
                               SDL_TEXTUREACCESS_STREAMING, w, h);
 }
 
-VM::~VM() { delete[] this->mem; }
+VM::~VM() { 
+  delete[] this->mem; 
+  if (texture) SDL_DestroyTexture(texture);
+  if (renderer) SDL_DestroyRenderer(renderer);
+  if (window) SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
 uint32_t VM::readMem(uint32_t addr) {
   return (this->mem[addr] << 24) | (this->mem[addr + 1] << 16) |
@@ -97,12 +104,11 @@ void VM::run() {
   }
 
   int instrsPerFrame = 1000; // Número de instruções a executar por frame 
-  for (int i = 0; i < instrsPerFrame && this->running; i++) {
+  for (int i = 0; i < instrsPerFrame && this->running && !this->halted; i++) {
     runInstr();
   }
 
   this->render();
-  sleep(3); // Ajuda pra testar, no momento, sem isso fecha muito rápido 
 
   // elapsed time since the start of the frame
   // frametime
@@ -446,7 +452,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     // case FRAMENUM:
     //
   case HALT: {
-    this->running = false;
+    this->halted = true;
     break;
   }
   default:
