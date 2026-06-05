@@ -382,7 +382,24 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     break;
   }
 
-    // case DSPRITE:
+    case DSPRITE: {
+      uint32_t x = this->regs[i_ra];
+      uint32_t y = this->regs[i_rb];  
+      uint32_t width = this->regs[i_rc];
+      uint32_t height = this->regs[i_rd];
+      uint32_t sprite_addr = this->regs[i_re];
+
+      for (uint32_t row = 0; row < height; row++){
+        for (uint32_t col = 0; col < width; col++){
+          if((y+row) >= h || (x+col)>=w){
+            continue;
+          }
+          uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
+          base[(y+row) * w + (x+col)] = color;
+        }        
+      }
+      break;
+    }
 
   case CLEAR: {
     const uint32_t pixelCount = this->w * this->h;

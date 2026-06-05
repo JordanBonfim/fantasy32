@@ -7,10 +7,15 @@
 .equ VERDE, 0xFF00FF00
 .equ AMARELO, 0xFFFFDE33
 .equ BRANCO, 0xFFFFFFFF
+.equ VERMELHO, 0xFFFF0000
 .equ PRETO, 0xFF000000
 .equ RETANGULO_LARG, 8
 .equ RETANGULO_ALT, 8
-msg: .string "Pressione ESPACO para continuar..."
+sprite: 
+.array 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0x00000000,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0x00000000,0xFFFFFFFF,0x00000000,0x00000000,0x00000000,0x00000000,0xFFFFFFFF,0x00000000, 0x00000000,0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0x00000000,0x00000000
+
+msg: .string "Pressione ESPACO para ver a magia"
+msg2: .string "KABOOOOM"
 
 .text
 START:
@@ -37,11 +42,7 @@ START:
     MOVH R4, AZUL.h         ; color = branco (ARGB)
     PSTR R1, R2, R3, R4    
 
-    ;MOVL R1, 50
-    ;MOVL R2, 50
-    ;MOVL R3, 1
-    ;MOVH R3, 1
-    ;PINT R1, R2, R3, R4
+    
 
     MOVL R1, 0        
     MOVL R2, 0          
@@ -67,6 +68,23 @@ START:
     MOVH R5, AMARELO.h         ; color = azul (parte alta)
     RECT R1, R2, R3, R4, R5
 
+    MOVL R1, 40
+    MOVL R2, 40
+    MOVL R3, 8
+    MOVL R4, 8
+    MOVL R5, sprite.l
+    MOVH R5, sprite.h
+    DSPRITE R1, R2, R3, R4, R5       ;ra = x, rb = y, rc = w, rd = h, re = endereço do sprite
+
+
+    MOVL R1, 10            ; x = 160
+    MOVL R2, 60            ; y = 120
+    MOVL R3, msg.l          ; endereço da string (parte baixa)
+    MOVH R3, msg.h          ; endereço da string (parte alta)
+    MOVL R4, BRANCO.l         ; color = branco (ARGB)
+    MOVH R4, BRANCO.h         ; color = branco (ARGB)
+    PSTR R1, R2, R3, R4 
+
 
 END: ; Fica em loop infinito
 
@@ -82,10 +100,30 @@ END: ; Fica em loop infinito
     MOVL R1, 0        
     MOVL R2, 0          
     MOVL R3, 320 
-    MOVL R4, 160  
+    MOVL R4, 20  
     MOVL R5, AZUL.l         ; color = azul (parte baixa)
     MOVH R5, AZUL.h         ; color = azul (parte alta)
     RECT R1, R2, R3, R4, R5
 
-    BEQ R0, R0, END
+
+    ; Espera até que a tecla ESPAÇO seja pressionada
+    MOVL R2, SPACE_KEYCODE  ; keyID = ESPAÇO
+    GKEY R1, R2             ; R1 = 1 se ESPAÇO estiver pressionado, 
+                            ; 0 caso contrário
+
+    BEQ R0, R1, END
+
+
+    ; Limpa a tela com vermelho após a tecla ser pressionada
+    MOVL R1, VERMELHO.l         ; color = azul (parte baixa)
+    MOVH R1, VERMELHO.h         ; color = azul (parte alta)
+    CLEAR R1                ; Limpa a tela com vermelho
+
+    MOVL R1, 30            ; x = 160
+    MOVL R2, 60            ; y = 120
+    MOVL R3, msg2.l          ; endereço da string (parte baixa)
+    MOVH R3, msg2.h          ; endereço da string (parte alta)
+    MOVL R4, BRANCO.l         ; color = branco (ARGB)
+    MOVH R4, BRANCO.h         ; color = branco (ARGB)
+    PSTR R1, R2, R3, R4 
 
