@@ -41,7 +41,7 @@ uint32_t VM::readMem(uint32_t addr) {
 }
 
 bool VM::writeMem(uint32_t addr, uint32_t value) {
-  if (addr >= S_MEM) {
+  if (addr + 3 >= S_MEM) {
     return false;
   }
   this->mem[addr] = (value >> 24) & 0xFF;
@@ -201,7 +201,7 @@ void VM::execTypeI(uint32_t instr, uint32_t opcode) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    this->regs[i_rt] = this->mem[addr];
+    this->regs[i_rt] = readMem(addr);
     break;
   }
   case STORE: {
@@ -210,7 +210,7 @@ void VM::execTypeI(uint32_t instr, uint32_t opcode) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    this->mem[addr] = this->regs[i_rt];
+    writeMem(addr, this->regs[i_rt]);
     break;
   }
 
