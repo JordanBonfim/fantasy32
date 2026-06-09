@@ -1,29 +1,24 @@
-#define MINIAUDIO_IMPLEMENTATION
-#include <audio.h>
-#include <miniaudio.h>
-
+#include "audio.h"
 #include <atomic>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <SDL2/SDL.h>
 
-void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
-                   ma_uint32 frameCount) {
-  AudioState *state = (AudioState *)pDevice->pUserData;
+
+void data_callback(void *userdata, Uint8 *stream, int len) {
+  AudioState *state = (AudioState *)userdata;
+
+  int frameCount = len / sizeof(float);
 
   float current_freq = state->frequency.load();
   int current_time = state->duration.load();
   int current_wave = state->waveForm.load();
   double current_phase = state->phase.load();
 
-  if (current_time <= 0) {
-    memset(pOutput, 0, frameCount * sizeof(float));
-    return;
-  }
+  float *output = (float *)stream; 
 
-  float *saida = (float *)pOutput;
-
-  for (ma_uint32 i = 0; i < frameCount; i++) {
+  for (int i = 0; i < frameCount; i++) {
     float sampleValue = 0.0f;
 
     if (state->duration > 0) {
@@ -48,31 +43,40 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
           break;
         }
       }
-      saida[i] = sampleValue;
+      output[i] = sampleValue;
     }else{
-      saida[i] = 0.0f;
+      output[i] = 0.0f;
     }
-
   }
   state->phase.store(current_phase);
 }
 
-bool start_miniaudio(ma_device *device, AudioState *state) {
-  ma_device_config config = ma_device_config_init(ma_device_type_playback);
-  config.playback.format = ma_format_f32;
-  config.playback.channels = 1;  // 0 to use the device's native channel count.
-  config.sampleRate = 48000;     // 0 to use the device's native sample rate.
-  config.dataCallback = data_callback;  // This function will be called when
-                                        // miniaudio needs more data.
-  config.pUserData =
-      state;  // Can be accessed from the device object (device.pUserData).
+SDL_AudioDeviceID start_audio(AudioState *state) {
+  SDL_AudioSpec desiredSpec, obtainedSpec;
+  
+  SDL_zero(desiredSpec); // zerar memoria
+  
+  desiredSpec.freq = 48000;
+  desiredSpec.format = AUDIO_F32; 
+  desiredSpec.channels = 1;
+  desiredSpec.samples = 512;
+  desiredSpec.callback = data_callback;
+  desiredSpec.userdata = state; 
 
-  if (ma_device_init(NULL, &config, device) != MA_SUCCESS) {
-    return 0;  // Failed to initialize the device.
+
+  SDL_AudioDeviceID deviceID = SDL_OpenAudioDevice(NULL, 0, &desiredSpec, &obtainedSpec, 0);
+  
+  if (deviceID == 0) {
+    return 0; 
   }
 
-  ma_device_start(device);
-  return 1;
+  SDL_PauseAudioDevice(deviceID, 0); 
+  
+  return deviceID;
 }
 
-void finish_miniaudio(ma_device *device) { ma_device_uninit(device); }
+void finish_audio(SDL_AudioDeviceID deviceID) { 
+    if (deviceID != 0) {
+        SDL_CloseAudioDevice(deviceID); 
+    }
+}

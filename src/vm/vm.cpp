@@ -27,7 +27,7 @@ VM::VM() {
 
   // Usando o sdl para cria um janela, cria e criar uma textura, e nela
   // renderizar os pixels da memória de vídeo
-  SDL_Init(SDL_INIT_VIDEO);
+  //SDL_Init(SDL_INIT_VIDEO); moved to main.cpp
   window = SDL_CreateWindow("Fantasys32", SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, w * scale, h * scale,
                             SDL_WINDOW_SHOWN);

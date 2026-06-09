@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
+#include <SDL2/SDL.h>
 
-struct ma_device;
 struct AudioState {
     std::atomic<float> frequency;     //  Equivalente ao ra (Hz)
     std::atomic<int> duration;       //   Equivalente ao rb traduzido para frames
@@ -9,6 +9,6 @@ struct AudioState {
     std::atomic<double> phase;
 };
 
-bool start_miniaudio(ma_device* device, AudioState* state);
+SDL_AudioDeviceID start_audio(AudioState *state);
 
-void finish_miniaudio(ma_device* device);
+void finish_audio(SDL_AudioDeviceID deviceID);
