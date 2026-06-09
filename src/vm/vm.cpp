@@ -8,6 +8,15 @@
 #include <unistd.h>
 #include "font.h"
 #include <string>
+#include <miniaudio.h>
+
+#include <atomic>
+struct AudioState {
+    std::atomic<float> frequency;
+    std::atomic<int> duration;
+    std::atomic<int> waveForm;
+    std::atomic<double> phase;
+};
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
@@ -414,7 +423,19 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     break;
   }
 
-    // case PLAY:
+  case PLAY:{
+    uint32_t freq = this->regs[i_ra];
+    uint32_t ms = this->regs[i_rb];
+    uint32_t wave_form = this->regs[i_rc];
+
+    if(m_audio != nullptr){
+      m_audio->frequency.store((float) freq);
+      m_audio->waveForm.store(wave_form);
+      m_audio->duration.store(ms*48);
+  
+    }
+    break; 
+  }
 
   case SLEEP: {
     uint32_t ms = this->regs[i_ra];

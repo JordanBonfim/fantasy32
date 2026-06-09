@@ -5,7 +5,7 @@
 #define S_MEM (16 * 1024 * 1024)
 #define SP 14
 #define PC 15
-
+struct AudioState;
 class VM {
 private:
   // running state
@@ -40,6 +40,9 @@ private:
   SDL_Texture *texture = nullptr;
   int scale = 1; // Fator de escala padrão [6]
 
+  // AUDIO
+  AudioState* m_audio = nullptr;
+
 public:
   VM();
   ~VM();
@@ -54,5 +57,6 @@ public:
   uint32_t getHeight() const {return h;};
   void incFrameNumber(){frame_number+=1;};
   uint32_t getFrameNumber(){return frame_number;};
+  void attachAudio(AudioState* audioState) {m_audio = audioState;}
 
 };
