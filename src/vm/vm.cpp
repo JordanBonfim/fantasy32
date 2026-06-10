@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include "font.h"
 #include <string>
-#include <miniaudio.h>
 
 #include <atomic>
 struct AudioState {
@@ -465,8 +464,43 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     break;
   }
   
-  // case SYSCALL:
-  //
+  case SYSCALL:{
+    uint32_t code = this->regs[i_ra];
+    uint32_t arg1 = this->regs[i_rb];
+    uint32_t arg2 = this->regs[i_rc];
+    uint32_t arg3 = this->regs[i_rd];
+    uint32_t arg4 = this->regs[i_re];
+
+    switch (code){
+      case 1: // PRINT INT
+        printf("%d\n", arg1);
+        break;
+      case 2: // PRINT HEXADECIMAL
+        printf("0x%08X\n", arg1);
+        break;
+      case 3: { // PRINT STRING
+        uint32_t str_addr = arg1;
+        while(str_addr < S_MEM && this->mem[str_addr] != '\0'){
+          putchar(this->mem[str_addr]);
+          str_addr++;
+        }
+        putchar('\n'); // Quebra de linha no final
+        break;
+      }
+      case 4:{
+        printf("\n------ REGISTERS ------\n");
+        for (int reg = 0; reg < 16; reg++){
+          printf("R%d:\t0x%08X\t(%d)\n", reg, this->regs[reg], this->regs[reg]);
+        }
+        break;
+      }
+        
+    default:
+      printf("Unknown syscall code!");
+      break;
+    }
+  }
+      
   case SRAND: {
     srand(this->regs[i_ra]);
     break;
