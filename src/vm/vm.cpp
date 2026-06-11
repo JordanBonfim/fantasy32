@@ -1,17 +1,47 @@
 #include "vm.h"
 #include "../util/util.cpp"
 #include "opcodes.h"
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include "font.h"
+#include <string>
+
+#include <atomic>
+struct AudioState {
+    std::atomic<float> frequency;
+    std::atomic<int> duration;
+    std::atomic<int> waveForm;
+    std::atomic<double> phase;
+};
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
+  this->halted = false;
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
+  this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
+
+  // Usando o sdl para cria um janela, cria e criar uma textura, e nela
+  // renderizar os pixels da memória de vídeo
+  //SDL_Init(SDL_INIT_VIDEO); moved to main.cpp
+  window = SDL_CreateWindow("Fantasys32", SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED, w * scale, h * scale,
+                            SDL_WINDOW_SHOWN);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+                              SDL_TEXTUREACCESS_STREAMING, w, h);
 }
 
-VM::~VM() { delete[] this->mem; }
+VM::~VM() { 
+  delete[] this->mem; 
+  if (texture) SDL_DestroyTexture(texture);
+  if (renderer) SDL_DestroyRenderer(renderer);
+  if (window) SDL_DestroyWindow(window);
+  SDL_Quit();
+}
 
 uint32_t VM::readMem(uint32_t addr) {
   return (this->mem[addr] << 24) | (this->mem[addr + 1] << 16) |
@@ -19,7 +49,7 @@ uint32_t VM::readMem(uint32_t addr) {
 }
 
 bool VM::writeMem(uint32_t addr, uint32_t value) {
-  if (addr >= S_MEM) {
+  if (addr + 3 >= S_MEM) {
     return false;
   }
   this->mem[addr] = (value >> 24) & 0xFF;
@@ -45,19 +75,66 @@ void VM::load(char *arqBin) {
 }
 
 void VM::runInstr() {
-  int32_t &pc = this->regs[PC];
-  uint32_t instr = readMem(pc);
+  uint32_t instr = readMem(this->regs[PC]);
   uint32_t opcode = instr >> 26;
 
+  this->regs[PC] += 4;
+
+  if (opcode <= 0x0B) {
+    this->execTypeR(instr, opcode);
+  } else if (opcode <= 0x16) {
+    this->execTypeI(instr, opcode);
+  } else if (opcode <= 0x18) {
+    this->execTypeJ(instr, opcode);
+  } else if (opcode <= 0x1E) {
+    this->execTypeU(instr, opcode);
+  } else if (opcode <= 0x2B) {
+    this->execTypeS(instr, opcode);
+  } else {
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
+
+void VM::run() {
+  if (!this->running) {
+    printf("Shutting down ZZZZZ.\n");
+    return;
+  }
+
+  uint32_t sTime = SDL_GetTicks();
+
+  // Processar Eventos (No nosso caso é basicamente o teclado)
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    if (event.type == SDL_QUIT) this->running = false;
+    // Atualiza o estado interno do teclado da VM
+    keyboard.handleEvent(event);
+  }
+
+  int instrsPerFrame = 1000; // Número de instruções a executar por frame 
+  for (int i = 0; i < instrsPerFrame && this->running && !this->halted; i++) {
+    runInstr();
+  }
+
+  this->render();
+
+  // elapsed time since the start of the frame
+  // frametime
+  // o controle de tempo parece ser obrigatório para manter o 60 fps
+
+  uint32_t eTime = SDL_GetTicks() - sTime;
+  uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
+  if (eTime < fTime) {
+    SDL_Delay(fTime - eTime); // Aguarda o tempo restante para o próximo frame
+    incFrameNumber();
+  }
+}
+
+void VM::execTypeR(uint32_t instr, uint32_t opcode) {
   uint32_t i_rs = (instr >> 22) & 0xF;
   uint32_t i_rt = (instr >> 18) & 0xF;
   uint32_t i_rd = (instr >> 14) & 0xF;
-  uint32_t i_imm = instr & 0x3FFFF;
-  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions,
-                                              // allowing negative values
-  uint32_t u_rd = (instr >> 22) & 0xF;
-
-  pc += 4;
 
   switch (opcode) {
   // Arithmetic and logical instructions (type R, except for ADDI)
@@ -99,6 +176,22 @@ void VM::runInstr() {
     this->regs[i_rd] = (this->regs[i_rs] >> (this->regs[i_rt] & 0x1F)) |
                        (this->regs[i_rs] << (32 - (this->regs[i_rt] & 0x1F)));
     break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
+
+void VM::execTypeI(uint32_t instr, uint32_t opcode) {
+  int32_t &pc = this->regs[PC];
+
+  uint32_t i_rs = (instr >> 22) & 0xF;
+  uint32_t i_rt = (instr >> 18) & 0xF;
+  uint32_t i_imm = instr & 0x3FFFF;
+  int32_t offset = (int16_t)(i_imm & 0xFFFF); // Used for branch instructions,
+                                              // allowing negative values
+
+  switch (opcode) {
   case ADDI: // Type I
     this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
     break;
@@ -110,22 +203,24 @@ void VM::runInstr() {
   case MOVH:
     this->regs[i_rt] = this->regs[i_rt] | (i_imm << 16);
     break;
-  case LOAD:
+  case LOAD: {
     uint32_t addr = this->regs[i_rs] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    this->regs[i_rt] = this->mem[addr];
+    this->regs[i_rt] = readMem(addr);
     break;
-  case STORE:
+  }
+  case STORE: {
     uint32_t addr = this->regs[i_rs] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    this->mem[addr] = this->regs[i_rt];
+    writeMem(addr, this->regs[i_rt]);
     break;
+  }
 
   // BRANCH INSTRUCTIONS (type I)
   case BEQ:
@@ -163,9 +258,17 @@ void VM::runInstr() {
       pc += (offset * 4);
     }
     break;
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
 
-  // JUMP INSTRUCTIONS (type J)
-  case JMP:
+void VM::execTypeJ(uint32_t instr, uint32_t opcode) {
+  int32_t &pc = this->regs[PC];
+
+  switch (opcode) {
+  case JMP: {
     uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
     if (!isInsideMem(target_addr26)) {
       printf("Invalid jump address: 0x%X\n", target_addr26);
@@ -173,8 +276,9 @@ void VM::runInstr() {
     }
     pc = target_addr26;
     break;
+  }
 
-  case CALL:
+  case CALL: {
     uint32_t target_addr26 = (instr & 0x03FFFFFF) << 2;
     if (!isInsideMem(target_addr26)) {
       printf("Invalid call address: 0x%X\n", target_addr26);
@@ -188,8 +292,17 @@ void VM::runInstr() {
     writeMem(this->regs[SP], pc);
     pc = target_addr26;
     break;
+  }
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    exit(1);
+  }
+}
 
-  // UNARY AND STACK INSTRUCTIONS (type U)
+void VM::execTypeU(uint32_t instr, uint32_t opcode) {
+  uint32_t u_rd = (instr >> 22) & 0xF;
+
+  switch (opcode) {
   case PUSH:
     if (this->regs[SP] <= 0x0FFEFFF) {
       printf("Stack Overflow\n");
@@ -221,11 +334,213 @@ void VM::runInstr() {
       printf("Stack Underflow\n");
       exit(1);
     }
-    pc = readMem(this->regs[SP]);
+    this->regs[PC] = readMem(this->regs[SP]);
     this->regs[SP] += 4;
     break;
   default:
     printf("Unknown opcode: 0x%X\n", opcode);
     exit(1);
+  }
+}
+
+void VM::execTypeS(uint32_t instr, uint32_t opcode) {
+
+  uint32_t i_ra = (instr >> 22) & 0xF;
+  uint32_t i_rb = (instr >> 18) & 0xF;
+  uint32_t i_rc = (instr >> 14) & 0xF;
+  uint32_t i_rd = (instr >> 10) & 0xF;
+  uint32_t i_re = (instr >> 6) & 0xF;
+
+  uint32_t *base =
+      reinterpret_cast<uint32_t *>(this->mem + this->videoMemStart);
+
+  switch (opcode) {
+  case RECT: {
+    const uint32_t ra = this->regs[i_ra];
+    const uint32_t rb = this->regs[i_rb];
+    uint32_t rc = this->regs[i_rc];
+    uint32_t rd = this->regs[i_rd];
+
+    const uint32_t w = this->w;
+    const uint32_t h = this->h;
+
+    if (ra >= w || rb >= h) {
+      printf("Invalid rectangle origin coordinates: (%u, %u)\n", ra, rb);
+      exit(1);
+    }
+
+    // truncate width
+    if (rc > w - ra) {
+      rc = w - ra;
+      this->regs[i_rc] = rc;
+    }
+
+    // truncate height
+    if (rd > h - rb) {
+      rd = h - rb;
+      this->regs[i_rd] = rd;
+    }
+    for (uint32_t i = 0; i < rd; i++) {
+      uint32_t *row = base + ((rb + i) * w + ra);
+      for (uint32_t j = 0; j < rc; j++) {
+        row[j] = this->regs[i_re];
+      }
+    }
+
+    break;
+  }
+
+    case DSPRITE: {
+      uint32_t x = this->regs[i_ra];
+      uint32_t y = this->regs[i_rb];  
+      uint32_t width = this->regs[i_rc];
+      uint32_t height = this->regs[i_rd];
+      uint32_t sprite_addr = this->regs[i_re];
+
+      for (uint32_t row = 0; row < height; row++){
+        for (uint32_t col = 0; col < width; col++){
+          if((y+row) >= h || (x+col)>=w){
+            continue;
+          }
+          uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
+          base[(y+row) * w + (x+col)] = color;
+        }        
+      }
+      break;
+    }
+
+  case CLEAR: {
+    const uint32_t pixelCount = this->w * this->h;
+    for (uint32_t i = 0; i < pixelCount; i++) {
+      base[i] = this->regs[i_ra];
+    }
+    break;
+  }
+
+  case GKEY: {
+    this->regs[i_ra] = keyboard.isKeyPressed(this->regs[i_rb]) ? 1 : 0;
+    break;
+  }
+
+  case PLAY:{
+    uint32_t freq = this->regs[i_ra];
+    uint32_t ms = this->regs[i_rb];
+    uint32_t wave_form = this->regs[i_rc];
+
+    if(m_audio != nullptr){
+      m_audio->frequency.store((float) freq);
+      m_audio->waveForm.store(wave_form);
+      m_audio->duration.store(ms*48);
+  
+    }
+    break; 
+  }
+
+  case SLEEP: {
+    uint32_t ms = this->regs[i_ra];
+    SDL_Delay(ms);
+    break;
+  }
+
+  case PSTR: {
+    drawText(
+      this->regs[i_ra], 
+      this->regs[i_rb], 
+      (char*)&this->mem[this->regs[i_rc]],
+      this->regs[i_rd], 
+      getWidth(), base);
+    break;
+  }
+
+  case PINT: {
+    std::string str = std::to_string(this->regs[i_rc]);
+    const char* text = str.c_str();
+    drawText(
+      this->regs[i_ra], 
+      this->regs[i_rb], 
+      text,
+      this->regs[i_rd], 
+      getWidth(), base);
+    break;
+  }
+  
+  case SYSCALL:{
+    uint32_t code = this->regs[i_ra];
+    uint32_t arg1 = this->regs[i_rb];
+    uint32_t arg2 = this->regs[i_rc];
+    uint32_t arg3 = this->regs[i_rd];
+    uint32_t arg4 = this->regs[i_re];
+
+    switch (code){
+      case 1: // PRINT INT
+        printf("%d\n", arg1);
+        break;
+      case 2: // PRINT HEXADECIMAL
+        printf("0x%08X\n", arg1);
+        break;
+      case 3: { // PRINT STRING
+        uint32_t str_addr = arg1;
+        while(str_addr < S_MEM && this->mem[str_addr] != '\0'){
+          putchar(this->mem[str_addr]);
+          str_addr++;
+        }
+        putchar('\n'); // Quebra de linha no final
+        break;
+      }
+      case 4:{
+        printf("\n------ REGISTERS ------\n");
+        for (int reg = 0; reg < 16; reg++){
+          printf("R%d:\t0x%08X\t(%d)\n", reg, this->regs[reg], this->regs[reg]);
+        }
+        break;
+      }
+        
+    default:
+      printf("Unknown syscall code!");
+      break;
+    }
+  }
+      
+  case SRAND: {
+    srand(this->regs[i_ra]);
+    break;
+  }
+
+  case RAND: {
+    this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
+    break;
+  }
+    
+  case FRAMENUM:{
+    this->regs[i_ra] = getFrameNumber();
+    break;
+  }
+    
+  case HALT: {
+    this->halted = true;
+    break;
+  }
+  default:
+    printf("Unknown opcode: 0x%X\n", opcode);
+    break;
+    // exit(1);
+  }
+}
+
+void VM::render() {
+  uint8_t *pixelData = &mem[videoMemStart];
+
+  SDL_UpdateTexture(texture, nullptr, pixelData, w * sizeof(uint32_t));
+
+  SDL_RenderClear(renderer);
+
+  SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+
+  SDL_RenderPresent(renderer);
+}
+void VM::printRegs() {
+  printf("Registers:\n");
+  for (int i = 0; i < 16; i++) {
+    printf("R%d: 0x%08X\n", i, this->regs[i]);
   }
 }
