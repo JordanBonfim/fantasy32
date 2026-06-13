@@ -10,7 +10,6 @@ class VM {
 private:
   // running state
   bool running = true;
-  bool halted = true;
   uint32_t frame_number = 0;
 
   int32_t regs[16];
@@ -38,10 +37,10 @@ private:
   SDL_Window *window = nullptr;
   SDL_Renderer *renderer = nullptr;
   SDL_Texture *texture = nullptr;
-  int scale = 1; // Fator de escala padrão [6]
+  int scale = 3; // Fator de escala padrão
 
   // AUDIO
-  AudioState* m_audio = nullptr;
+  AudioState *m_audio = nullptr;
 
 public:
   VM();
@@ -53,10 +52,9 @@ public:
   void render();
   void printRegs();
   void initGraphics(int windowScale);
-  uint32_t getWidth() const {return w;};
-  uint32_t getHeight() const {return h;};
-  void incFrameNumber(){frame_number+=1;};
-  uint32_t getFrameNumber(){return frame_number;};
-  void attachAudio(AudioState* audioState) {m_audio = audioState;}
-
+  uint32_t getWidth() const { return w; };
+  uint32_t getHeight() const { return h; };
+  void incFrameNumber() { frame_number += 1; };
+  uint32_t getFrameNumber() { return frame_number; };
+  void attachAudio(AudioState *audioState) { m_audio = audioState; }
 };

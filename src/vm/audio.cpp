@@ -12,7 +12,7 @@ void data_callback(void *userdata, Uint8 *stream, int len) {
   int frameCount = len / sizeof(float);
 
   float current_freq = state->frequency.load();
-  int current_time = state->duration.load();
+  // int current_time = state->duration.load();
   int current_wave = state->waveForm.load();
   double current_phase = state->phase.load();
 

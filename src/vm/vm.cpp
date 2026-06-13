@@ -1,32 +1,31 @@
 #include "vm.h"
 #include "../util/util.cpp"
+#include "font.h"
 #include "opcodes.h"
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include "font.h"
 #include <string>
+#include <unistd.h>
 
 #include <atomic>
 struct AudioState {
-    std::atomic<float> frequency;
-    std::atomic<int> duration;
-    std::atomic<int> waveForm;
-    std::atomic<double> phase;
+  std::atomic<float> frequency;
+  std::atomic<int> duration;
+  std::atomic<int> waveForm;
+  std::atomic<double> phase;
 };
 
 VM::VM() {
   this->mem = new uint8_t[S_MEM];
-  this->halted = false;
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
   this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
 
   // Usando o sdl para cria um janela, cria e criar uma textura, e nela
   // renderizar os pixels da memória de vídeo
-  //SDL_Init(SDL_INIT_VIDEO); moved to main.cpp
+  // SDL_Init(SDL_INIT_VIDEO); moved to main.cpp
   window = SDL_CreateWindow("Fantasys32", SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, w * scale, h * scale,
                             SDL_WINDOW_SHOWN);
@@ -35,11 +34,14 @@ VM::VM() {
                               SDL_TEXTUREACCESS_STREAMING, w, h);
 }
 
-VM::~VM() { 
-  delete[] this->mem; 
-  if (texture) SDL_DestroyTexture(texture);
-  if (renderer) SDL_DestroyRenderer(renderer);
-  if (window) SDL_DestroyWindow(window);
+VM::~VM() {
+  delete[] this->mem;
+  if (texture)
+    SDL_DestroyTexture(texture);
+  if (renderer)
+    SDL_DestroyRenderer(renderer);
+  if (window)
+    SDL_DestroyWindow(window);
   SDL_Quit();
 }
 
@@ -97,38 +99,37 @@ void VM::runInstr() {
 }
 
 void VM::run() {
-  if (!this->running) {
-    printf("Shutting down ZZZZZ.\n");
-    return;
+  while (this->running) {
+    uint32_t sTime = SDL_GetTicks();
+    // Processar Eventos (No nosso caso é basicamente o teclado)
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      if (event.type == SDL_QUIT)
+        this->running = false;
+      // Atualiza o estado interno do teclado da VM
+      keyboard.handleEvent(event);
+    }
+
+    int instrsPerFrame = 1000; // Número de instruções a executar por frame
+    for (int i = 0; i < instrsPerFrame; i++) {
+      runInstr();
+    }
+
+    this->render();
+
+    // elapsed time since the start of the frame
+    // frametime
+    // o controle de tempo parece ser obrigatório para manter o 60 fps
+
+    uint32_t eTime = SDL_GetTicks() - sTime;
+    uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
+    if (eTime < fTime) {
+      SDL_Delay(fTime - eTime); // Aguarda o tempo restante para o próximo frame
+      incFrameNumber();
+    }
   }
 
-  uint32_t sTime = SDL_GetTicks();
-
-  // Processar Eventos (No nosso caso é basicamente o teclado)
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) this->running = false;
-    // Atualiza o estado interno do teclado da VM
-    keyboard.handleEvent(event);
-  }
-
-  int instrsPerFrame = 1000; // Número de instruções a executar por frame 
-  for (int i = 0; i < instrsPerFrame && this->running && !this->halted; i++) {
-    runInstr();
-  }
-
-  this->render();
-
-  // elapsed time since the start of the frame
-  // frametime
-  // o controle de tempo parece ser obrigatório para manter o 60 fps
-
-  uint32_t eTime = SDL_GetTicks() - sTime;
-  uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
-  if (eTime < fTime) {
-    SDL_Delay(fTime - eTime); // Aguarda o tempo restante para o próximo frame
-    incFrameNumber();
-  }
+  printf("Shutting down ZZZZZ.\n");
 }
 
 void VM::execTypeR(uint32_t instr, uint32_t opcode) {
@@ -390,24 +391,24 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     break;
   }
 
-    case DSPRITE: {
-      uint32_t x = this->regs[i_ra];
-      uint32_t y = this->regs[i_rb];  
-      uint32_t width = this->regs[i_rc];
-      uint32_t height = this->regs[i_rd];
-      uint32_t sprite_addr = this->regs[i_re];
+  case DSPRITE: {
+    uint32_t x = this->regs[i_ra];
+    uint32_t y = this->regs[i_rb];
+    uint32_t width = this->regs[i_rc];
+    uint32_t height = this->regs[i_rd];
+    uint32_t sprite_addr = this->regs[i_re];
 
-      for (uint32_t row = 0; row < height; row++){
-        for (uint32_t col = 0; col < width; col++){
-          if((y+row) >= h || (x+col)>=w){
-            continue;
-          }
-          uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
-          base[(y+row) * w + (x+col)] = color;
-        }        
+    for (uint32_t row = 0; row < height; row++) {
+      for (uint32_t col = 0; col < width; col++) {
+        if ((y + row) >= h || (x + col) >= w) {
+          continue;
+        }
+        uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
+        base[(y + row) * w + (x + col)] = color;
       }
-      break;
     }
+    break;
+  }
 
   case CLEAR: {
     const uint32_t pixelCount = this->w * this->h;
@@ -422,18 +423,17 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     break;
   }
 
-  case PLAY:{
+  case PLAY: {
     uint32_t freq = this->regs[i_ra];
     uint32_t ms = this->regs[i_rb];
     uint32_t wave_form = this->regs[i_rc];
 
-    if(m_audio != nullptr){
-      m_audio->frequency.store((float) freq);
+    if (m_audio != nullptr) {
+      m_audio->frequency.store((float)freq);
       m_audio->waveForm.store(wave_form);
-      m_audio->duration.store(ms*48);
-  
+      m_audio->duration.store(ms * 48);
     }
-    break; 
+    break;
   }
 
   case SLEEP: {
@@ -443,64 +443,57 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case PSTR: {
-    drawText(
-      this->regs[i_ra], 
-      this->regs[i_rb], 
-      (char*)&this->mem[this->regs[i_rc]],
-      this->regs[i_rd], 
-      getWidth(), base);
+    drawText(this->regs[i_ra], this->regs[i_rb],
+             (char *)&this->mem[this->regs[i_rc]], this->regs[i_rd], getWidth(),
+             base);
     break;
   }
 
   case PINT: {
     std::string str = std::to_string(this->regs[i_rc]);
-    const char* text = str.c_str();
-    drawText(
-      this->regs[i_ra], 
-      this->regs[i_rb], 
-      text,
-      this->regs[i_rd], 
-      getWidth(), base);
+    const char *text = str.c_str();
+    drawText(this->regs[i_ra], this->regs[i_rb], text, this->regs[i_rd],
+             getWidth(), base);
     break;
   }
-  
-  case SYSCALL:{
+
+  case SYSCALL: {
     uint32_t code = this->regs[i_ra];
     uint32_t arg1 = this->regs[i_rb];
-    uint32_t arg2 = this->regs[i_rc];
-    uint32_t arg3 = this->regs[i_rd];
-    uint32_t arg4 = this->regs[i_re];
+    // uint32_t arg2 = this->regs[i_rc];
+    // uint32_t arg3 = this->regs[i_rd];
+    // uint32_t arg4 = this->regs[i_re];
 
-    switch (code){
-      case 1: // PRINT INT
-        printf("%d\n", arg1);
-        break;
-      case 2: // PRINT HEXADECIMAL
-        printf("0x%08X\n", arg1);
-        break;
-      case 3: { // PRINT STRING
-        uint32_t str_addr = arg1;
-        while(str_addr < S_MEM && this->mem[str_addr] != '\0'){
-          putchar(this->mem[str_addr]);
-          str_addr++;
-        }
-        putchar('\n'); // Quebra de linha no final
-        break;
+    switch (code) {
+    case 1: // PRINT INT
+      printf("%d\n", arg1);
+      break;
+    case 2: // PRINT HEXADECIMAL
+      printf("0x%08X\n", arg1);
+      break;
+    case 3: { // PRINT STRING
+      uint32_t str_addr = arg1;
+      while (str_addr < S_MEM && this->mem[str_addr] != '\0') {
+        putchar(this->mem[str_addr]);
+        str_addr++;
       }
-      case 4:{
-        printf("\n------ REGISTERS ------\n");
-        for (int reg = 0; reg < 16; reg++){
-          printf("R%d:\t0x%08X\t(%d)\n", reg, this->regs[reg], this->regs[reg]);
-        }
-        break;
+      putchar('\n'); // Quebra de linha no final
+      break;
+    }
+    case 4: {
+      printf("\n------ REGISTERS ------\n");
+      for (int reg = 0; reg < 16; reg++) {
+        printf("R%d:\t0x%08X\t(%d)\n", reg, this->regs[reg], this->regs[reg]);
       }
-        
+      break;
+    }
+
     default:
       printf("Unknown syscall code!");
       break;
     }
   }
-      
+
   case SRAND: {
     srand(this->regs[i_ra]);
     break;
@@ -510,14 +503,14 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
     break;
   }
-    
-  case FRAMENUM:{
+
+  case FRAMENUM: {
     this->regs[i_ra] = getFrameNumber();
     break;
   }
-    
+
   case HALT: {
-    this->halted = true;
+    this->running = false;
     break;
   }
   default:
