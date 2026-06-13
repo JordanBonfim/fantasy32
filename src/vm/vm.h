@@ -10,6 +10,7 @@ class VM {
 private:
   // running state
   bool running = true;
+  uint32_t sleepUntil = 0;
   uint32_t frame_number = 0;
 
   int32_t regs[16];

@@ -111,8 +111,15 @@ void VM::run() {
     }
 
     int instrsPerFrame = 1000; // Número de instruções a executar por frame
-    for (int i = 0; i < instrsPerFrame; i++) {
-      runInstr();
+
+    if (SDL_GetTicks() >= this->sleepUntil) {
+      for (int i = 0; i < instrsPerFrame && this->running; i++) {
+        runInstr();
+        // Se runInstr acionou um SLEEP, interrompe o loop de instruções do
+        // frame
+        if (SDL_GetTicks() < this->sleepUntil)
+          break;
+      }
     }
 
     this->render();
@@ -438,7 +445,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
 
   case SLEEP: {
     uint32_t ms = this->regs[i_ra];
-    SDL_Delay(ms);
+    this->sleepUntil = SDL_GetTicks() + ms; // Define quando a pausa acaba
     break;
   }
 
