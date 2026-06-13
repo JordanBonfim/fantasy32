@@ -3,28 +3,51 @@
 
 .data
 .equ SPACE_KEYCODE, 0x04
-.equ AZUL, 0xFF0000FF
 .equ BRANCO, 0xFFFFFFFF
 .equ PRETO, 0xFF000000
-.equ RETANGULO_LARG, 8
-.equ RETANGULO_ALT, 8
+.equ VERDE, 0xFF6ABE30
+.equ AZUL, 0xFF1835E5
+.equ VERMELHO , 0xFFAC3232
+.equ BLOCK_W, 8
+.equ BLOCK_H, 8
 msg: .string "Pressione ESPACO para continuar..."
 
 .text
+
+; Aqui é desenhar o layout básico usando apenas retângulos.
 START:
     ; Limpa a tela
     MOVL R1, PRETO.l         ; color = preto (parte baixa)
     MOVH R1, PRETO.h         ; color = preto (parte alta)
     CLEAR R1
+;13 10 
+;184 14
+;13 229
+;184 229
 
-    ; Desenha um retângulo azul no centro da tela
-    MOVL R1, 160            ; x = 160
-    MOVL R2, 120            ; y = 120
-    MOVL R3, RETANGULO_LARG ; w = 8
-    MOVL R4, RETANGULO_ALT  ; h = 8
+    ; Desenha 4 retângulos azuis para formar aonde as peças vão ficar
     MOVL R5, AZUL.l         ; color = azul (parte baixa)
     MOVH R5, AZUL.h         ; color = azul (parte alta)
-    RECT R1, R2, R3, R4, R5
+    
+    MOVL R1, 13
+    MOVL R2, 10
+    MOVL R3, 171
+    MOVL R4, 4
+    RECT R1, R2, R3, R4, R5 ; linha superior
+    
+    MOVL R3, 4
+    MOVL R4, 219
+    RECT R1, R2, R3, R4, R5 ; linha esquerda
+    
+    MOVL R1, 181
+    MOVL R2, 10
+    RECT R1, R2, R3, R4, R5 ; linha direita
+
+    MOVL R1, 13
+    MOVL R2, 226
+    MOVL R3, 171
+    MOVL R4, 4
+    RECT R1, R2, R3, R4, R5 ; linha direita
 
     ; Imprime a mensagem
     MOVL R1, 10            ; x = 160
@@ -48,6 +71,4 @@ WAIT_KEY:
     CLEAR R1                ; Limpa a tela com azul
 
 END: ; espra 1s e fecha a VM
-    ADDI R6, R6, 3000
-    SLEEP R6
     HALT
