@@ -140,10 +140,10 @@ void VM::run() {
 }
 
 void VM::execTypeR(uint32_t instr, uint32_t opcode) {
-  uint32_t i_rs = (instr >> 22) & 0xF;
-  uint32_t i_rt = (instr >> 18) & 0xF;
-  uint32_t i_rd = (instr >> 14) & 0xF;
-
+  uint32_t i_rd = (instr >> 22) & 0xF;
+  uint32_t i_rs = (instr >> 18) & 0xF;
+  uint32_t i_rt = (instr >> 14) & 0xF;
+  
   switch (opcode) {
   // Arithmetic and logical instructions (type R, except for ADDI)
   case ADD:
@@ -201,7 +201,7 @@ void VM::execTypeI(uint32_t instr, uint32_t opcode) {
 
   switch (opcode) {
   case ADDI: // Type I
-    this->regs[i_rt] = this->regs[i_rs] + (i_imm & 0xFFFF);
+    this->regs[i_rs] = this->regs[i_rt] + (i_imm & 0xFFFF);
     break;
 
   // Memory movement instructions (type I)
@@ -212,21 +212,21 @@ void VM::execTypeI(uint32_t instr, uint32_t opcode) {
     this->regs[i_rt] = this->regs[i_rt] | (i_imm << 16);
     break;
   case LOAD: {
-    uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+    uint32_t addr = this->regs[i_rt] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    this->regs[i_rt] = readMem(addr);
+    this->regs[i_rs] = readMem(addr);
     break;
   }
   case STORE: {
-    uint32_t addr = this->regs[i_rs] + (i_imm * 4);
+    uint32_t addr = this->regs[i_rt] + (i_imm * 4);
     if (!isInsideMem(addr)) {
       printf("Memory access out of bounds: 0x%X\n", addr);
       exit(1);
     }
-    writeMem(addr, this->regs[i_rt]);
+    writeMem(addr, this->regs[i_rs]);
     break;
   }
 
@@ -312,7 +312,7 @@ void VM::execTypeU(uint32_t instr, uint32_t opcode) {
 
   switch (opcode) {
   case PUSH:
-    if (this->regs[SP] <= 0x0FFEFFF) {
+    if (this->regs[SP] <= 0x00FFEFFF) {
       printf("Stack Overflow\n");
       exit(1);
     }
@@ -394,7 +394,6 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
         row[j] = this->regs[i_re];
       }
     }
-
     break;
   }
 
@@ -470,7 +469,6 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     // uint32_t arg2 = this->regs[i_rc];
     // uint32_t arg3 = this->regs[i_rd];
     // uint32_t arg4 = this->regs[i_re];
-
     switch (code) {
     case 1: // PRINT INT
       printf("%d\n", arg1);
@@ -494,13 +492,25 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
       }
       break;
     }
-
+    case 5: {
+      // Print da pilha
+      uint32_t sp = this->regs[SP];     // R14 = SP
+      uint32_t topo_pilha = 0x00FFFFFF; // SP inicial
+      printf("=== PILHA ===\n");
+      printf("SP atual: 0x%08X\n", sp);
+      // Percorre da posição atual do SP até o topo
+      for (uint32_t addr = sp; addr <= topo_pilha; addr += 4) {
+        uint32_t val = this->readMem(addr);
+        printf("  [0x%08X] = 0x%08X (%d)\n", addr, val, (int32_t)val);
+      }
+      printf("=============\n");
+      break;
+    }
     default:
       printf("Unknown syscall code!");
       break;
     }
   }
-
   case SRAND: {
     srand(this->regs[i_ra]);
     break;
