@@ -24,7 +24,7 @@
 .equ BLOCK_H, 16
 .equ START_X, 19
 .equ START_Y, 16
-.equ ROW_N, 14
+.equ ROW_N, 13
 .equ COLL_N, 10
 
 msg: .string "Pressione ESPACO para continuar..."
@@ -74,39 +74,161 @@ START:
     MUL R3, R3, R4
     SUB R14, R14, R3 ; garante 10*14*4 espaços na pilha
 
-RUN:
-    CALL WRITE_L
-    MOVL R1, 5
-    SYSCALL R1, R0, R0, R0, R0
+    ; Peça inicial é um L
+    CALL DRAW_L
     CALL DRAW_MATRIZ
+    MOVL R1, 500
+    SLEEP R1
 
-SPACE:
-    ; Espera até que a tecla ESPAÇO seja pressionada
+RUN:
+    ; LIMPAR AONDE A PEÇA ESTAVA
+    MOVL R3, PRETO.l
+    MOVH R3, PRETO.h
+
+    MOVL R2, 2
+    SHL R1, R9, R2
+    ADD R1, R1, R14
+    STORE R3, R1, 0
+    
+    SHL R1, R10, R2
+    ADD R1, R1, R14
+    STORE R3, R1, 0
+    
+    SHL R1, R11, R2
+    ADD R1, R1, R14
+    STORE R3, R1, 0
+
+    SHL R1, R12, R2
+    ADD R1, R1, R14
+    STORE R3, R1, 0
+
+    ; SOMAR O VALOR DE UMA LINHA EM CADA UM DELES, PARA QUE ELES PASSEM PARA A COLUNA DE BAIXO
+    MOVL R1, COLL_N
+    ADD R9, R9, R1
+    ADD R10, R10, R1
+    ADD R11, R11, R1
+    ADD R12, R12, R1
+
+
+    MOVL R1, 129 ; ESSE VALOR MÁGICO É O MÁXIMO NO TABULEIRO
+    SLEEP R1
+    BGT R9, R1, COLISION_INF
+    BGT R10, R1, COLISION_INF
+    BGT R11, R1, COLISION_INF
+    BGT R12, R1, COLISION_INF
+
+    MOVL R3, PRETO.l
+    MOVH R3, PRETO.h
+
+
+    SHL R1, R9, R2
+    ADD R1, R1, R14
+
+    STORE R13, R1, 0
+
+    SHL R1, R10, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R11, R2
+    ADD R1, R1, R14
+    LOAD R4, R1, 0 ; Se oq tiver na próxima posição for diferente de preto, colisão
+    BNE R0, R4, COLISION_INF
+    STORE R13, R1, 0
+
+    SHL R1, R12, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    CALL DRAW_MATRIZ
+    MOVL R1, 200
+    SLEEP R1
+
+
+
     MOVL R2, SPACE_KEYCODE  ; keyID = ESPAÇO
     GKEY R1, R2             ; R1 = 1 se ESPAÇO estiver pressionado, 
                             ; 0 caso contrário
-    BEQ R1, R0, SPACE    ; Se R1 == 0, continua esperando
+    BEQ R1, R0, RUN    ; Se R1 == 0, continua esperando
+
+COLISION_INF: ; COLIDE a peça com a parte de baixo e salva a posição dela no game
+
+    ; RETROCEDE UMA CASA E SALVA
+    MOVL R3, COLL_N
+    SUB R9, R9, R3
+    SUB R10, R10, R3
+    SUB R11, R11, R3
+    SUB R12, R12, R3
 
 
-END: ; espra 1s e fecha a VM
-    HALT
+    MOVL R2, 2
+    SHL R1, R9, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
 
-WRITE_L: ; escreve L na matriz
-    POP  R1              ; salva endereço de retorno
-    MOVL R3, VERMELHO.l
-    MOVH R3, VERMELHO.h
-    
-    STORE R3, R14, 4     ; board[0][4]
-    STORE R3, R14, 14    ; board[1][4]  (5 + 10)
-    STORE R3, R14, 24    ; board[2][4]  (5 + 20)
-    STORE R3, R14, 25    ; board[2][5]  (25 + 1)
-    
-    PUSH R1
+    SHL R1, R10, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R11, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R12, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    MOVL R1, 500
+    SLEEP R1
+    CALL DRAW_L
+    CALL DRAW_MATRIZ
+
+    JMP RUN
+
+
+
+DRAW_L:
+    POP R3
+    MOVL R9,  4
+    MOVL R10, 14
+    MOVL R11, 24
+    MOVL R12, 25
+    MOVL R13, VERMELHO.l
+    MOVH R13, VERMELHO.h
+
+    MOVL R2, 2
+
+    SHL R1, R9, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R10, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R11, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    SHL R1, R12, R2
+    ADD R1, R1, R14
+    STORE R13, R1, 0
+
+    PUSH R3
     RET
+
+
+
 
 DRAW_MATRIZ:
     POP R1
-    MOVL R2, 140 ; TAMANHO TOTAL DA matriZ
+    ; faz store dos registradores mágicos antes de seguir na função
+    PUSH R9
+    PUSH R10
+    PUSH R11
+    PUSH R12
+
+    MOVL R2, 130 ; TAMANHO TOTAL DA matriZ
     MOVL R3, 0 ; CONTADOR
     MOVL R4, START_X
     MOVL R5, START_Y
@@ -114,13 +236,12 @@ DRAW_MATRIZ:
     MOVL R7, BLOCK_H
     MOVL R8, ROW_N
     MOVL R9, COLL_N
-    ADDI R12, R14, 0
+    ADDI R12, R14, 16
 
     ADDI R13, R13, 2
     LOOP_DRAW_MATRIZ:
         LOAD R11, R12, 0    ; R11 = Mem[R12]
         ADDI R12, R12, 4
-        SYSCALL R13, R11, R0, R0, R0
         MOD R10, R3, R9      ; coluna
         MUL R4, R10, R6      ; coluna * BLOCK_W
         ADDI R4, R4, START_X
@@ -135,6 +256,11 @@ DRAW_MATRIZ:
         INC R3
     BNE R2, R3, LOOP_DRAW_MATRIZ
     
+    POP R12
+    POP R11
+    POP R10
+    POP R9
+
     PUSH R1
     RET
 
