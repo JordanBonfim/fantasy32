@@ -22,7 +22,7 @@ MATRIZ: .space[140]
 
 ; Controla a quantidade de frames até a peça sofrer gravidade
 ; ou seja, é invercamente proporcional a velocidade de queda
-.equ FRAMES_FALL, 10
+.equ FRAMES_FALL, 20
 
 msg: .string "Pressione ESPACO para COMECAR..."
 
@@ -93,10 +93,17 @@ RUN:
     MOVL R2, A_KEYCODE
     GKEY R1, R2
     BNE R1, R0, PRESSED_A
+
+    MOVL R2, W_KEYCODE
+    GKEY R1, R2
+    BNE R1, R0, PRESSED_W
+
     MOVL R2, D_KEYCODE
     GKEY R1, R2
     BNE R1, R0, PRESSED_D
+
     JMP NOTHING_PRESSED
+
     PRESSED_A:
         MOVL R1, IS_PRESSED.l ; se no  ultimo frame ele já tinha apertado a tecla, não iremos computar o input, sem segurar a tecla bobão
         MOVH R1, IS_PRESSED.h
@@ -106,6 +113,7 @@ RUN:
         STORE R2, R1, 0
         CALL MOVE_LEFT
         JMP AFTER_INPUT
+
     PRESSED_D:
         MOVL R1, IS_PRESSED.l
         MOVH R1, IS_PRESSED.h
@@ -115,10 +123,22 @@ RUN:
         STORE R2, R1, 0
         CALL MOVE_RIGHT
         JMP AFTER_INPUT
+    
+    PRESSED_W: ; Rotação
+        MOVL R1, IS_PRESSED.l
+        MOVH R1, IS_PRESSED.h
+        LOAD R3, R1, 0
+        BNE R3, R0, AFTER_INPUT
+        MOVL R2, 1
+        STORE R2, R1, 0
+        CALL ROTATE_PIECE
+        JMP AFTER_INPUT
+    
     NOTHING_PRESSED: ; Nenhum botão foi pressionado, pode resetar o nosso mano
         MOVL R1, IS_PRESSED.l
         MOVH R1, IS_PRESSED.h
         STORE R0, R1, 0
+    
     AFTER_INPUT:
 
     ; gravidade ------------------------------------------------
@@ -388,7 +408,7 @@ CLEAR_OLD:
 ; define posições de r9 até r12 e r13 deve ser a cor
 DRAW_L:
     MOVL R9,  4
-    MOVL R10, 14
+    MOVL R10, 14 ; pivo eterno :)
     MOVL R11, 24
     MOVL R12, 25
     MOVL R13, VERMELHO.l
@@ -457,4 +477,101 @@ PRINT_MATRIZ:
         SYSCALL R4, R5, R0, R0, R0
         INC R2
         BLE R2, R3, LOOP_PRINT_MATRIZ
+    RET
+
+ROTATE_PIECE:
+    ADD R1, R9, R0
+    CALL ROTATE_BLOCK
+    ADD R4, R1, R0
+
+    ADD R1, R11, R0
+    CALL ROTATE_BLOCK
+    ADD R5, R1, R0
+
+    ADD R1, R12, R0
+    CALL ROTATE_BLOCK
+    ADD R6, R1, R0
+
+    MOVL R7, 140
+    BEQ R4, R7, CANCEL_ROT
+    BEQ R5, R7, CANCEL_ROT
+    BEQ R6, R7, CANCEL_ROT
+
+    MOVL R1, 2
+    MOVL R2, PRETO.l
+    MOVH R2, PRETO.h
+    MOVL R3, MATRIZ.l
+    MOVH R3, MATRIZ.h
+
+    SHL R7, R4, R1
+    ADD R7, R7, R3
+    LOAD R8, R7, 0
+    BNE R8, R2, CANCEL_ROT
+
+    SHL R7, R5, R1
+    ADD R7, R7, R3
+    LOAD R8, R7, 0
+    BNE R8, R2, CANCEL_ROT
+
+    SHL R7, R6, R1
+    ADD R7, R7, R3
+    LOAD R8, R7, 0
+    BNE R8, R2, CANCEL_ROT
+
+    ADD R9, R4, R0
+    ADD R11, R5, R0
+    ADD R12, R6, R0
+
+CANCEL_ROT:
+    RET
+
+ROTATE_BLOCK:
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+    PUSH R6
+    PUSH R7
+    PUSH R8
+
+    MOVL R8, COLL_N
+    
+    DIV R4, R10, R8
+    MOD R5, R10, R8
+
+    DIV R2, R1, R8
+    MOD R3, R1, R8
+
+    SUB R2, R2, R4
+    SUB R3, R3, R5
+
+    ADD R6, R3, R0
+    SUB R7, R0, R2
+
+    ADD R2, R4, R6
+    ADD R3, R5, R7
+
+    BLT R2, R0, ROT_FAIL
+    MOVL R6, 13
+    BGT R2, R6, ROT_FAIL
+    
+    BLT R3, R0, ROT_FAIL
+    MOVL R6, 9
+    BGT R3, R6, ROT_FAIL
+
+    MUL R1, R2, R8
+    ADD R1, R1, R3
+    JMP ROT_SUCCESS
+
+ROT_FAIL:
+    MOVL R1, 140
+
+ROT_SUCCESS:
+    POP R8
+    POP R7
+    POP R6
+    POP R5
+    POP R4
+    POP R3
+    POP R2
     RET
