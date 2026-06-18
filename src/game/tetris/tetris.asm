@@ -16,11 +16,13 @@
 .equ ROW_N, 14
 .equ COLL_N, 10
 .equ MATRIZ_S, 140
+IS_PRESSED: .var 0
+ROTATION: .var 0
 MATRIZ: .space[140]
 
 ; Controla a quantidade de frames até a peça sofrer gravidade
 ; ou seja, é invercamente proporcional a velocidade de queda
-.equ FRAMES_FALL, 5
+.equ FRAMES_FALL, 10
 
 msg: .string "Pressione ESPACO para COMECAR..."
 
@@ -94,16 +96,32 @@ RUN:
     MOVL R2, D_KEYCODE
     GKEY R1, R2
     BNE R1, R0, PRESSED_D
-    JMP AFTER_INPUT
+    JMP NOTHING_PRESSED
     PRESSED_A:
+        MOVL R1, IS_PRESSED.l ; se no  ultimo frame ele já tinha apertado a tecla, não iremos computar o input, sem segurar a tecla bobão
+        MOVH R1, IS_PRESSED.h
+        LOAD R3, R1, 0
+        BNE R3, R0, AFTER_INPUT
+        MOVL R2, 1
+        STORE R2, R1, 0
         CALL MOVE_LEFT
         JMP AFTER_INPUT
     PRESSED_D:
+        MOVL R1, IS_PRESSED.l
+        MOVH R1, IS_PRESSED.h
+        LOAD R3, R1, 0
+        BNE R3, R0, AFTER_INPUT
+        MOVL R2, 1
+        STORE R2, R1, 0
         CALL MOVE_RIGHT
         JMP AFTER_INPUT
+    NOTHING_PRESSED: ; Nenhum botão foi pressionado, pode resetar o nosso mano
+        MOVL R1, IS_PRESSED.l
+        MOVH R1, IS_PRESSED.h
+        STORE R0, R1, 0
     AFTER_INPUT:
 
-    ; gravidade
+    ; gravidade ------------------------------------------------
     POP R4
     INC R4
     MOVL R5, FRAMES_FALL
@@ -123,35 +141,51 @@ RUN:
         BGT R11, R1, COLISION_INF
         BGT R12, R1, COLISION_INF
 
-        ; colisão com peças na MATRIZ
         MOVL R3, PRETO.l
         MOVH R3, PRETO.h
         MOVL R4, MATRIZ.l
         MOVH R4, MATRIZ.h
         MOVL R2, 2
 
+        ; Verifica célula 1
         SHL R1, R9, R2
         ADD R1, R1, R4
         LOAD R5, R1, 0
-        BNE R5, R3, COLISION_INF
-        STORE R13, R1, 0
+        BNE R5, R3, COLISION_INF   ; colisão 
 
+        ; Verifica célula 2
         SHL R1, R10, R2
         ADD R1, R1, R4
         LOAD R5, R1, 0
         BNE R5, R3, COLISION_INF
-        STORE R13, R1, 0
 
+        ; Verifica célula 3
         SHL R1, R11, R2
         ADD R1, R1, R4
         LOAD R5, R1, 0
         BNE R5, R3, COLISION_INF
-        STORE R13, R1, 0
 
+        ; Verifica célula 4
         SHL R1, R12, R2
         ADD R1, R1, R4
         LOAD R5, R1, 0
         BNE R5, R3, COLISION_INF
+
+        ; Nenhuma colisão
+        SHL R1, R9, R2
+        ADD R1, R1, R4
+        STORE R13, R1, 0
+
+        SHL R1, R10, R2
+        ADD R1, R1, R4
+        STORE R13, R1, 0
+
+        SHL R1, R11, R2
+        ADD R1, R1, R4
+        STORE R13, R1, 0
+
+        SHL R1, R12, R2
+        ADD R1, R1, R4
         STORE R13, R1, 0
 
     SKIP_FALL:
@@ -219,7 +253,7 @@ MOVE_RIGHT:
     RET
 
     COLISION_RIGHT:
-        SUB R9,  R9,  R8    ; <-- R8 ainda é 1
+        SUB R9,  R9,  R8   
         SUB R10, R10, R8
         SUB R11, R11, R8
         SUB R12, R12, R8
