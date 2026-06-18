@@ -126,7 +126,7 @@ void VM::run() {
 
     // elapsed time since the start of the frame
     // frametime
-    // o controle de tempo parece ser obrigatório para manter o 60 fps
+    // o controle de tempo é obrigatório para manter o 60 fps
 
     uint32_t eTime = SDL_GetTicks() - sTime;
     uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
@@ -143,7 +143,7 @@ void VM::execTypeR(uint32_t instr, uint32_t opcode) {
   uint32_t i_rd = (instr >> 22) & 0xF;
   uint32_t i_rs = (instr >> 18) & 0xF;
   uint32_t i_rt = (instr >> 14) & 0xF;
-  
+
   switch (opcode) {
   // Arithmetic and logical instructions (type R, except for ADDI)
   case ADD:
