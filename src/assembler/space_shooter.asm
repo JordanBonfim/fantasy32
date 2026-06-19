@@ -5,12 +5,21 @@
 .equ RIGHT_ARROW_KEYCODE, 0x01
 .equ UP_ARROW_KEYCODE, 0x02
 .equ DOWN_ARROW_KEYCODE, 0x03
+.equ SPACE_KEYCODE, 0x04
+
 .equ AZUL, 0xFF0000FF
 .equ PRETO, 0xFF000000
 .equ BRANCO, 0xFFFFFFFF
 .equ VERMELHO, 0xFFFF0000
 .equ AMARELO, 0xFFFFDE33
 
+.equ MAX_BULLETS, 10
+; Cada tiro usa 1 palavra (32 bits) em cada array
+bullet_active: .space 10  ; 1 = ativo, 0 = livre para atirar
+bullet_x:      .space 10  ; Posição X
+bullet_y:      .space 10  ; Posição Y
+
+bullet_counter: .var 0
 
 player_x: .var 70
 player_y: .var 200
@@ -65,118 +74,118 @@ PLAY_INITIAL_MUSIC:
     MOVL R4, 130    ; duração padrão
 
       
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
     
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 165
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 165
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 147
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 147
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 131
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 131
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 117
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 117
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 123
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 123
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 131
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 131
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 165
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 165
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 147
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 147
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 131
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 131
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 82
-    PLAY R1, R4, R3
-    SLEEP R4
+    ; MOVL R1, 82
+    ; PLAY R1, R4, R3
+    ; SLEEP R4
 
-    MOVL R1, 117
-    MOVL R4, 300
-    PLAY R1, R4, R3
+    ; MOVL R1, 117
+    ; MOVL R4, 300
+    ; PLAY R1, R4, R3
 
 
   
@@ -268,7 +277,7 @@ DRAW_STARS_BACKGROUND:
     PSTR R5, R6, R7, R8 
 
     MOVL R3, 4
-    SYSCALL R3, R0,R0,R0,R0
+    ; SYSCALL R3, R0,R0,R0,R0
 
     
     
@@ -304,6 +313,38 @@ GAME:
     ; Se passou do BEQ, significa que o frame mudou (1/60 de segundo se passou!)
     STORE R5, R4, 0      ; Atualiza o frame_counter com o novo frame
 
+    SPACE_KEY_INPUT:
+        MOVL R6, 1 ; codigo syscall para printar inteiro
+
+
+        MOVL R3, SPACE_KEYCODE 
+        GKEY R4, R3
+        BEQ R4, R0, MOVE_PLAYER ; Se a barra de espaço não estiver pressionada, move o player normalmente
+
+        
+        
+        ; Verificar se ainda pode atirar (se bullets_counter < MAX_BULLETS)
+        ; R5 = bullet_counter
+        ; R7 = max_bullets
+        MOVL R1, bullet_counter.l
+        MOVH R1, bullet_counter.h
+        LOAD R5, R1, 0
+
+        MOVL R7, MAX_BULLETS.l
+        MOVH R7, MAX_BULLETS.h
+        ; SYSCALL R6, R5, R0, R0, R0
+        ; SYSCALL R6, R7, R0, R0, R0
+
+        BGE R5, R7, MOVE_PLAYER  ; Se já atirou o máximo de balas, não atira e move o player normalmente
+
+        ADDI R5, R5, 1           ; Incrementa o contador de balas atiradas
+        STORE R5, R1, 0          ; Salva o novo valor do contador de balas
+
+        
+
+
+        AND R4, R0, R0;
+
     MOVE_PLAYER:
         ;; PLAYER POSITION 
         MOVL R6, player_x.l
@@ -320,6 +361,8 @@ GAME:
         MOVL R5, PRETO.l
         MOVH R5, PRETO.h
         RECT R1, R2, R3, R4, R5
+
+        
 
         LEFT_ARROW: 
             MOVL R3, LEFT_ARROW_KEYCODE
