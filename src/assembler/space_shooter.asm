@@ -34,7 +34,17 @@ movement_frame_counter: .var 0
 enemy_frame_counter: .var 0
 enemy_spawn_timeout: .var 3
 
+player_health: .var 5
+
+heart_sprite:
+.array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1C25, 0xFFEC1C25, 0xFFFFFEFF, 0xFFEC1D24, 0x00000000, 0xFFEC1C24, 0xFFEC1C25, 0xFFED1C25, 0xFFED1C24, 0xFFEC1C24, 0xFFED1C24, 0xFFED1C25, 0xFFEC1C24, 0xFFFFFEFE, 0xFFED1D25, 0xFFED1C24, 0xFFED1D24, 0xFFED1C25, 0xFFED1C25, 0xFFEC1C25, 0xFFED1D25, 0xFFEC1C24, 0xFFED1D24, 0xFFFFFEFE, 0xFFED1D24, 0xFF9D5B3D, 0xFFEC1C24, 0xFFED1C25, 0xFFED1D24, 0xFFEC1D25, 0xFFED1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0xFF9D5B3C, 0xFFED1D25, 0xFFED1D24, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C24, 0xFFEC1D24, 0xFFED1C24, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFEC1C25, 0xFFEC1C25, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFED1D24, 0xFFED1D24, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9C5B3D, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+
+
 msg: .string "WELCOME TO DOOMSHIP!"
+END_STRING: .string "YOU LOSE!"
+
+score: .var 0
+
 
 
 black_ship_sprite:
@@ -64,6 +74,42 @@ START:
     MOVL R3, 320 ; W
     MOVL R4, 240 ; H
     RECT R1, R2, R3, R4, R5
+
+    ; PRINT SCORE
+
+    MOVL R7, score.l
+    MOVH R7, score.h
+    LOAD R4, R7, 0    
+    MOVL R1, 10
+    MOVL R2, 10
+    MOVL R3, AMARELO.l       
+    MOVH R3, AMARELO.h         
+    PINT R1, R2, R4, R3
+
+    
+    MOVL R12, heart_sprite.l
+    MOVH R12, heart_sprite.h
+    
+    MOVL R1, 10                     ; X
+    MOVL R2, 200                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+    MOVL R1, 10                     ; X
+    MOVL R2, 180                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+    MOVL R1, 10                     ; X
+    MOVL R2, 160                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+    MOVL R1, 10                     ; X
+    MOVL R2, 140                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
     BEQ R0, R0, PLAY_INITIAL_MUSIC
     
 
@@ -218,9 +264,9 @@ DRAW_STARS_BACKGROUND:
     MOVH R8, BRANCO.h
 
     ; Linha superior
-    MOVL R1, 10
-    MOVL R2, 10
-    RECT R1, R2, R7, R7, R8
+    ; MOVL R1, 10
+    ; MOVL R2, 10
+    ; RECT R1, R2, R7, R7, R8
 
     MOVL R1, 45
     MOVL R2, 25
@@ -296,10 +342,65 @@ DRAW_STARS_BACKGROUND:
     MOVH R8, AZUL.h         ; color = branco (ARGB)
     PSTR R5, R6, R7, R8 
 
-    MOVL R3, 4
+    ; MOVL R3, 4
     ; SYSCALL R3, R0,R0,R0,R0
+    
+
+    MOVL R3, player_health.l
+    MOVH R3, player_health.h
+    LOAD R4, R3, 0 
+
+
+    MOVL R12, heart_sprite.l
+    MOVH R12, heart_sprite.h
+
+    MOVL R8, 4
+
+    HEALTH_5:     
+    BLE R4, R8, HEALTH_4
+    MOVL R1, 10                     ; X
+    MOVL R2, 120                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+
+    HEALTH_4:
+    DEC R8  
+    BLE R4, R8, HEALTH_3   
+    MOVL R1, 10                     ; X
+    MOVL R2, 140                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+    HEALTH_3:  
+    DEC R8 
+    BLE R4, R8, HEALTH_2  
+    MOVL R1, 10                     ; X
+    MOVL R2, 160                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
+    HEALTH_2:
+    DEC R8     
+    BLE R4, R8, HEALTH_1
+    MOVL R1, 10                     ; X
+    MOVL R2, 180                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
     
+
+    
+    HEALTH_1:
+    
+    DEC R8     
+    BLE R4, R8, END_GAME
+
+    MOVL R1, 10                     ; X
+    MOVL R2, 200                    ; Y
+    MOVL R3, 10                     ; Largura (W)
+    DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
+
     AND R1, R0, R0      ; Enemy index = 0
     MOVL R3, enemy_active.l
     MOVH R3, enemy_active.h
@@ -418,9 +519,32 @@ DRAW_STARS_BACKGROUND:
 
             MOVL R7, 1      ; waveform
             MOVL R8, 100    ; duração padrão
-            MOVL R10, 150
+            MOVL R10, 150   ; frequência
             PLAY R10, R8, R7
 
+            ;; Score logic
+
+            MOVL R7, score.l
+            MOVH R7, score.h
+
+            LOAD R8, R7, 0
+            MOVL R9, 100
+            ADD R8, R8, R9
+
+            ; CLEAN OLD STORE
+            MOVL R1, 10        
+            MOVL R2, 10          
+            MOVL R3, 48
+            MOVL R4, 16  
+            MOVL R5, PRETO.l         
+            MOVH R5, PRETO.h         
+            RECT R1, R2, R3, R4, R5
+
+            
+
+            STORE R8, R7, 0
+
+            
             ; Inimigo abatido, sem necessidade de verificar mais
             BEQ R0, R0, NEXT_ENEMY_DRAW
 
@@ -442,7 +566,34 @@ DRAW_STARS_BACKGROUND:
 
         DEACTIVATE_ENEMY:
             STORE R0, R3, 0                 ; Libera o slot do inimigo
+            
+            ;; DECREASE HEALTH LOGIC
+            
+            MOVL R6, player_health.l
+            MOVH R6, player_health.h
+            LOAD R7, R6, 0
+            DEC R7
+            STORE R7, R6, 0
+            MOVL R9, 1
+            ; SYSCALL R9, R7, R0, R0, R0
 
+            PUSH R1
+            PUSH R2
+            PUSH R3
+            PUSH R4
+        
+            ; APAGAR VIDA
+            MOVL R1, 10                      ; x
+            MOVL R2, 120                      ; y
+            MOVL R3, 10                      ; Largura (W)
+            MOVL R4, 100                      ; Altura (H)
+            MOVL R5, PRETO.l               
+            MOVH R5, PRETO.h
+            RECT R1, R2, R3, R4, R5 
+            POP R4
+            POP R3
+            POP R2
+            POP R1
         NEXT_ENEMY_DRAW:
             ADDI R3, R3, 4                  
             INC R1                          
@@ -520,23 +671,17 @@ DRAW_STARS_BACKGROUND:
 GAME:
 
 
-    ; CLEAN FRAME COUNTER FOR NEXT FRAME
-    MOVL R1, 10        
-    MOVL R2, 10          
-    MOVL R3, 48
-    MOVL R4, 16  
-    MOVL R5, PRETO.l         
-    MOVH R5, PRETO.h         
-    RECT R1, R2, R3, R4, R5
+    
+    ; PRINT SCORE
 
-    ; FRAME COUNTER
-    FRAMENUM R4
+    MOVL R7, score.l
+    MOVH R7, score.h
+    LOAD R4, R7, 0    
     MOVL R1, 10
     MOVL R2, 10
     MOVL R3, AMARELO.l       
     MOVH R3, AMARELO.h         
     PINT R1, R2, R4, R3
-
 
 
     ; ENEMIES LOGIC
@@ -720,7 +865,6 @@ GAME:
         DSPRITE R1, R2, R3, R3, R5     
 
         
-
         LEFT_ARROW: 
             MOVL R3, LEFT_ARROW_KEYCODE
             GKEY R4, R3
@@ -769,3 +913,25 @@ GAME:
     BEQ R0, R0, DRAW_STARS_BACKGROUND ; infinite loop
 
 
+
+
+
+END_GAME:
+    MOVL R1, PRETO.l
+    MOVH R1, PRETO.h
+    CLEAR R1
+
+
+
+    MOVL R5, 80            ; x = 160
+    MOVL R6, 60            ; y = 120
+    MOVL R7, END_STRING.l          ; endereço da string (parte baixa)
+    MOVH R7, END_STRING.h          ; endereço da string (parte alta)
+    MOVL R8, AZUL.l         ; color = branco (ARGB)
+    MOVH R8, AZUL.h         ; color = branco (ARGB)
+    PSTR R5, R6, R7, R8 
+
+
+
+
+    BEQ R0, R0, END_GAME
