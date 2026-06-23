@@ -93,7 +93,7 @@ void VM::runInstr() {
   } else if (opcode <= 0x2B) {
     this->execTypeS(instr, opcode);
   } else {
-    printf("Unknown opcode: 0x%X\n", opcode);
+    printf("Unknown opcode, not a instruct type: 0x%X\n", opcode);
     exit(1);
   }
 }
@@ -517,7 +517,8 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case RAND: {
-    this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
+    this->regs[i_ra] = rand() % (this->regs[i_rc] + 1) + this->regs[i_rb];
+
     break;
   }
 
