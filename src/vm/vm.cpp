@@ -368,6 +368,12 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     const uint32_t rb = this->regs[i_rb];
     uint32_t rc = this->regs[i_rc];
     uint32_t rd = this->regs[i_rd];
+    const uint32_t color = this->regs[i_re];
+
+    // Se for transparente, não precisa mudar
+    if (color == 0x00000000) {
+      break;
+    }
 
     const uint32_t w = this->w;
     const uint32_t h = this->h;
@@ -391,7 +397,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     for (uint32_t i = 0; i < rd; i++) {
       uint32_t *row = base + ((rb + i) * w + ra);
       for (uint32_t j = 0; j < rc; j++) {
-        row[j] = this->regs[i_re];
+        row[j] = color;
       }
     }
     break;
@@ -410,7 +416,9 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
           continue;
         }
         uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
-        base[(y + row) * w + (x + col)] = color;
+        if (color != 0x00000000) {
+            base[(y + row) * w + (x + col)] = color;
+        }
       }
     }
     break;
