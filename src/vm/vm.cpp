@@ -525,7 +525,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case RAND: {
-    this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
+    uint32_t min = this->regs[i_rb];
+    uint32_t max = this->regs[i_rc];
+    
+    this->regs[i_ra] = min + (rand() % (max - min + 1));
     break;
   }
 
