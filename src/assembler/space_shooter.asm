@@ -23,7 +23,9 @@ bullet_counter: .var 0
 
 player_x: .var 70
 player_y: .var 200
-frame_counter: .var 0
+movement_frame_counter: .var 0
+enemy_frame_counter: .var 0
+enemy_spawn_timeout: .var 3
 
 msg: .string "WELCOME TO DOOMSHIP!"
 
@@ -279,12 +281,70 @@ DRAW_STARS_BACKGROUND:
     MOVL R3, 4
     ; SYSCALL R3, R0,R0,R0,R0
 
-    
-    
+    AND R1, R0, R0      ; Bullet index = 0
+    MOVL R3, bullet_active.l
+    MOVH R3, bullet_active.h
+
+    DRAW_BULLETS:
+        LOAD R4, R3, 0                  ; Verifica se o tiro atual está ativo
+        BEQ R4, R0, NEXT_BULLET_DRAW    ; Se 0 (inativo), pula para o próximo
+
+        ; CÁLCULO DE OFFSET EM BYTES (R1 * 4) 
+        MOVL R10, 2
+        SHL R9, R1, R10                 ; R9 = R1 << 2 (offset)
+
+        ; CARREGAR POSIÇÃO X DO TIRO
+        MOVL R11, bullet_x.l
+        MOVH R11, bullet_x.h
+        ADD R11, R11, R9                ; Base X + offset
+        LOAD R5, R11, 0                 ; R5 = Posição X da bala
+        ADDI R5, R5, 7                  ; Centraliza o tiro em relação à nave
+
+        ; CARREGAR E ATUALIZAR POSIÇÃO Y DO TIRO
+        MOVL R11, bullet_y.l
+        MOVH R11, bullet_y.h
+        ADD R11, R11, R9                ; Base Y + offset
+        LOAD R6, R11, 0                 ; R6 = Posição Y atual
+
+        ; APAGAR TIRO ANTERIOR
+        MOVL R7, 2                      ; Largura (W)
+        MOVL R8, 6                      ; Altura (H)
+        MOVL R12, PRETO.l               
+        MOVH R12, PRETO.h
+        RECT R5, R6, R7, R8, R12        
+
+        ; ATUALIZAR POSIÇÃO Y 
+        MOVL R12, 2                     ; Velocidade do projétil: sobe 2 pixels por frame
+        SUB R6, R6, R12                 
+        STORE R6, R11, 0                ; Salva a nova posição Y na memória
+
+        ; LIMITE DA TELA
+        ; Se Y <= 0, desvia para a rotina de desativação
+        BLE R6, R0, DEACTIVATE_BULLET 
+
+        ; DESENHAR O NOVO PROJÉTIL
+        MOVL R12, VERMELHO.l            ; Cor do laser
+        MOVH R12, VERMELHO.h
+        RECT R5, R6, R7, R8, R12        
+        BEQ R0, R0, NEXT_BULLET_DRAW    ; Pula a desativação e vai para a próxima
+
+    DEACTIVATE_BULLET:
+        ; O tiro saiu da tela. Liberamos o slot definindo bullet_active[i] = 0
+        ; R3 ainda aponta para o endereço no array
+        STORE R0, R3, 0
+
+    NEXT_BULLET_DRAW:
+        ADDI R3, R3, 4                  ; Avança para o próximo endereço de bullet_active
+        INC R1                          ; Incrementa o contador de índice
+
+        ; Verifica se já iterou por todas as balas
+        MOVL R7, 10                     ; Carrega o valor de MAX_BULLETS diretamente
+        BGE R1, R7, GAME                ; Se i >= 10, encerra o loop de desenho e vai para GAME
+
+        BEQ R0, R0, DRAW_BULLETS        ; Retorna para desenhar a próxima bala
 
 GAME:
 
-    ; CALL DRAW_STARS_BACKGROUND
 
     ; CLEAN FRAME COUNTER FOR NEXT FRAME
     MOVL R1, 10        
@@ -303,47 +363,119 @@ GAME:
     MOVH R3, AMARELO.h         
     PINT R1, R2, R4, R3
 
+
+
+    ; ENEMIES LOGIC
+
+    MOVL R4, enemy_frame_counter.l
+    MOVH R4, enemy_frame_counter.h
+    LOAD R3, R4, 0       ; R3 = Guarda o último frame em que um inimigo apareceu
+    FRAMENUM R5          ; R5 = Pega o frame atual do relógio
+    SUB R6, R6, R3        ; R5 = frame atual - último frame
+
+    STORE R5, R4, 0
+    
+    ; MOVL R5, enemy_frame_counter.l
+    ; MOVH R5, enemy_frame_counter.h
+
+
+
+
+
+    MOVL R6, 120
+    BLT R5, R6, DEPOIS      ; Se não passou 120
+
+    
+    ;;
+    MOVL R5, 50
+    MOVL R7, 20                      ; Largura (W)
+    MOVL R8, 10                      ; Altura (H)
+    MOVL R12, BRANCO.l               ; 
+    MOVH R12, BRANCO.h
+    RECT R5, R6, R7, R8, R12
+
+
+    DEPOIS:
+
+
+
     ; FPS SYNC
-    MOVL R4, frame_counter.l
-    MOVH R4, frame_counter.h
+    MOVL R4, movement_frame_counter.l
+    MOVH R4, movement_frame_counter.h
     LOAD R3, R4, 0       ; R3 = Guarda o último frame em que a nave se moveu
     FRAMENUM R5          ; R5 = Pega o frame atual do relógio
     BEQ R3, R5, GAME     ; Se o frame for igual, volta pro começo (espera!)
 
     ; Se passou do BEQ, significa que o frame mudou (1/60 de segundo se passou!)
-    STORE R5, R4, 0      ; Atualiza o frame_counter com o novo frame
+    STORE R5, R4, 0      ; Atualiza o movement_frame_counter com o novo frame
+
+    MANAGE_COOLDOWN:
+        MOVL R11, bullet_counter.l
+        MOVH R11, bullet_counter.h
+        LOAD R12, R11, 0
+        BEQ R12, R0, SPACE_KEY_INPUT    ; Se o cooldown for 0, pronto pra atirar
+        DEC R12                         ; Se for maior que 0, espera 1 frame
+        STORE R12, R11, 0
+        BEQ R0, R0, MOVE_PLAYER         ; Ignora até cooldown terminar
 
     SPACE_KEY_INPUT:
-        MOVL R6, 1 ; codigo syscall para printar inteiro
-
-
         MOVL R3, SPACE_KEYCODE 
         GKEY R4, R3
         BEQ R4, R0, MOVE_PLAYER ; Se a barra de espaço não estiver pressionada, move o player normalmente
 
         
+        AND R1, R0, R0                  ; R1 = Contador de índice (0 a 9)
+        MOVL R3, bullet_active.l
+        MOVH R3, bullet_active.h
+        MOVL R12, 10                    ; R12 = MAX_BULLETS
         
-        ; Verificar se ainda pode atirar (se bullets_counter < MAX_BULLETS)
-        ; R5 = bullet_counter
-        ; R7 = max_bullets
-        MOVL R1, bullet_counter.l
-        MOVH R1, bullet_counter.h
-        LOAD R5, R1, 0
+    FIND_BULLET_INDEX:
+        LOAD R4, R3, 0          
+        BEQ R4, R0, INACTIVE_BULLET_FOUND ; Achou uma livre
 
-        MOVL R7, MAX_BULLETS.l
-        MOVH R7, MAX_BULLETS.h
-        ; SYSCALL R6, R5, R0, R0, R0
-        ; SYSCALL R6, R7, R0, R0, R0
-
-        BGE R5, R7, MOVE_PLAYER  ; Se já atirou o máximo de balas, não atira e move o player normalmente
-
-        ADDI R5, R5, 1           ; Incrementa o contador de balas atiradas
-        STORE R5, R1, 0          ; Salva o novo valor do contador de balas
-
+        ADDI R3, R3, 4                  ; Avança endereço do active
+        INC R1                          ; Próximo índice
         
+        BLT R1, R12, FIND_BULLET_INDEX  ; Se i < 10, continua procurando
+        BEQ R0, R0, MOVE_PLAYER         ; Se não achou nenhuma, sai
 
+        INACTIVE_BULLET_FOUND:
+            MOVL R12, 5                    ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
+            MOVL R11, bullet_counter.l
+            MOVH R11, bullet_counter.h
+            STORE R12, R11, 0               ; Ativa cooldown para o próximo tiro
 
-        AND R4, R0, R0;
+            ; Ativa a bala na memória (R3 já aponta para bullet_active[i])
+            MOVL R4, 1
+            STORE R4, R3, 0
+
+            ; O índice original está em R1. calcular o offset em bytes (R1 * 4)
+            MOVL R10, 2
+            SHL R9, R1, R10                 ; R9 = R1 << 2  (Equivalente a R1 * 4)
+
+            ; POSIÇÃO ATUAL DO JOGADOR
+            MOVL R6, player_x.l
+            MOVH R6, player_x.h
+            LOAD R7, R6, 0                  ; R7 = valor de player_x
+
+            MOVL R8, player_y.l
+            MOVH R8, player_y.h
+            LOAD R10, R8, 0                 ; R10 = valor de player_y
+
+            ; SALVAR EM bullet_x[i] 
+            MOVL R11, bullet_x.l
+            MOVH R11, bullet_x.h
+            ADD R11, R11, R9                ; Endereço = base de bullet_x + offset
+            STORE R7, R11, 0                ; Mem[bullet_x + (i*4)] = player_x
+
+            ; SALVAR EM bullet_y[i]
+            MOVL R11, bullet_y.l
+            MOVH R11, bullet_y.h
+            ADD R11, R11, R9                ; Endereço = base de bullet_y + offset
+            STORE R10, R11, 0               ; Mem[bullet_y + (i*4)] = player_y
+
+            BEQ R0, R0, MOVE_PLAYER         ; Retorna ao fluxo de movimento
+
 
     MOVE_PLAYER:
         ;; PLAYER POSITION 
