@@ -299,7 +299,8 @@ DRAW_STARS_BACKGROUND:
     MOVL R3, 4
     ; SYSCALL R3, R0,R0,R0,R0
 
-    AND R1, R0, R0      ; Bullet index = 0
+    
+    AND R1, R0, R0      ; Enemy index = 0
     MOVL R3, enemy_active.l
     MOVH R3, enemy_active.h
 
@@ -324,50 +325,127 @@ DRAW_STARS_BACKGROUND:
         LOAD R6, R11, 0                 ; R6 = Posição Y 
 
 
+        ; APAGAR RASTRO DO INIMIGO 
 
-        ; --- APAGAR RASTRO DO INIMIGO ---
-        ; MOVL R7, 20                     ; Largura (W)
-        ; MOVL R8, 10                     ; Altura (H)
-        ; MOVL R12, PRETO.l               
-        ; MOVH R12, PRETO.h
-        ; RECT R5, R6, R7, R8, R12
-
-        
-        ; DRAW SPACE SHIP
         MOVL R7, 16                     ; Largura (W)
         MOVL R12, black_enemy_ship_sprite.l
         MOVH R12, black_enemy_ship_sprite.h
         DSPRITE R5, R6, R7, R7, R12       ; Desenha na nova coordenada
 
-        ; --- ATUALIZAR POSIÇÃO Y (Descer) ---
-        MOVL R12, 1                     ; Velocidade do inimigo: desce 1 pixel por frame
+        ; ATUALIZAR POSIÇÃO Y (Descer) 
+        MOVL R12, 1                    ; Velocidade do inimigo: desce 1 pixel por frame
         ADD R6, R6, R12                 
         STORE R6, R11, 0                ; Salva a nova posição Y na memória
 
-        ; --- VERIFICAR LIMITE DA TELA ---
+        ; VERIFICAR LIMITE DA TELA 
         MOVL R12, 240                   ; Altura máxima da tela
         BGE R6, R12, DEACTIVATE_ENEMY   ; Se passou do fundo, desativa
 
-             
-        ; DRAW SPACE SHIP
-        MOVL R7, 16                     ; Largura (W)
-        MOVL R12, enemy_ship_sprite.l
-        MOVH R12, enemy_ship_sprite.h
-        DSPRITE R5, R6, R7, R7, R12       ; Desenha na nova coordenada
 
-        BEQ R0, R0, NEXT_ENEMY_DRAW
-    DEACTIVATE_ENEMY:
-        STORE R0, R3, 0                 ; Libera o slot definindo enemy_active[i] = 0
+        ;; DETECT COLLISION WITH BULLETS
 
-    NEXT_ENEMY_DRAW:
-        ADDI R3, R3, 4                  
-        INC R1                          
+        DETECT_COLISION:
+            ; Registradores qu não posso usar:
+            ; R1 = Index inimigo
+            ; R3 = Endereço active
+            ; R5 = enemy_x, 
+            ; R6 = enemy_y
 
-        MOVL R7, 5                      ; CORRIGIDO: Limite de 5 inimigos!
-        BGE R1, R7, FINISHED_ENEMY_DRAW 
+            AND R2, R0, R0                  ; R2 = Bullet index = 0
+            MOVL R4, bullet_active.l        ; R4 = Ponteiro base das balas ativas
+            MOVH R4, bullet_active.h
 
-        BEQ R0, R0, DRAW_ENEMIES
+        BULLET_CALC:
+            LOAD R8, R4, 0                  ; Verifica se o tiro atual está ativo
+            BEQ R8, R0, NEXT_BULLET_VER     ; Se inativo, pula
 
+            ; CÁLCULO DE OFFSET EM BYTES (R2 * 4)
+            MOVL R10, 2
+            SHL R9, R2, R10                 ; R9 = R2 << 2 (offset)
+
+            ; CARREGAR POSIÇÃO X DO TIRO
+            MOVL R11, bullet_x.l
+            MOVH R11, bullet_x.h
+            ADD R11, R11, R9                
+            LOAD R8, R11, 0                 ; R8 = Posição X da bala
+            ADDI R8, R8, 7                  ; Centraliza o tiro 
+
+            ; CARREGAR POSIÇÃO Y DO TIRO 
+            MOVL R11, bullet_y.l
+            MOVH R11, bullet_y.h
+            ADD R11, R11, R9                
+            LOAD R12, R11, 0                ; R12 = Posição Y da bala (Protegendo R6!)
+
+            ;; LÓGICA DE COLISÃO  
+            ; CONDIÇÕES DE NÃO COLISÃO
+
+            ; bullet_x >= enemy_x + enemy_width (16)
+            MOVL R10, 16
+            ADD R11, R5, R10                ; R11 = enemy_x + 16
+            BGE R8, R11, NEXT_BULLET_VER
+
+            ; enemy_x >= bullet_x + bullet_width (2)
+            MOVL R10, 2
+            ADD R11, R8, R10                ; R11 = bullet_x + 2
+            BGE R5, R11, NEXT_BULLET_VER
+
+            ; bullet_y >= enemy_y + enemy_height (16)
+            MOVL R10, 16
+            ADD R11, R6, R10                ; R11 = enemy_y + 16
+            BGE R12, R11, NEXT_BULLET_VER
+
+            ; enemy_y >= bullet_y + bullet_height (6)
+            MOVL R10, 6
+            ADD R11, R12, R10               ; R11 = bullet_y + 6
+            BGE R6, R11, NEXT_BULLET_VER
+
+            ;; TIRO COLIDIU
+            
+            ; APAGA O TIRO
+            MOVL R10, 2                     ; W do tiro
+            MOVL R11, 6                     ; H do tiro
+            MOVL R13, PRETO.l
+            MOVH R13, PRETO.h
+            RECT R8, R12, R10, R11, R13
+
+            ; APAGA O INIMIGO
+            MOVL R10, 16                    ; W/H do inimigo
+            RECT R5, R6, R10, R10, R13
+
+            ; Desativa as entidades na memória
+            STORE R0, R4, 0                 ; bullet_active[i] = 0
+            STORE R0, R3, 0                 ; enemy_active[i] = 0
+
+            ; Inimigo abatido, sem necessidade de verificar mais
+            BEQ R0, R0, NEXT_ENEMY_DRAW
+
+        NEXT_BULLET_VER:
+            ADDI R4, R4, 4                  ; Avança o ponteiro bullet_active
+            INC R2                          ; Incrementa índice do tiro
+            
+            MOVL R7, 10                     ; MAX_BULLETS
+            BGE R2, R7, DRAW_ENEMY_SHIP     ; Não houve colisão, desenha
+            BEQ R0, R0, BULLET_CALC
+
+        DRAW_ENEMY_SHIP:
+            MOVL R7, 16                     ; Largura (W) e Altura (H)
+            MOVL R12, enemy_ship_sprite.l
+            MOVH R12, enemy_ship_sprite.h
+            DSPRITE R5, R6, R7, R7, R12 
+
+            BEQ R0, R0, NEXT_ENEMY_DRAW
+
+        DEACTIVATE_ENEMY:
+            STORE R0, R3, 0                 ; Libera o slot do inimigo
+
+        NEXT_ENEMY_DRAW:
+            ADDI R3, R3, 4                  
+            INC R1                          
+
+            MOVL R7, 5                      ; Limite de 5 inimigos
+            BGE R1, R7, FINISHED_ENEMY_DRAW 
+
+            BEQ R0, R0, DRAW_ENEMIES
     FINISHED_ENEMY_DRAW:
         AND R1, R0, R0      ; Bullet index = 0
         MOVL R3, bullet_active.l
