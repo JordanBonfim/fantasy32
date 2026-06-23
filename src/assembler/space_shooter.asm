@@ -416,6 +416,11 @@ DRAW_STARS_BACKGROUND:
             STORE R0, R4, 0                 ; bullet_active[i] = 0
             STORE R0, R3, 0                 ; enemy_active[i] = 0
 
+            MOVL R7, 1      ; waveform
+            MOVL R8, 100    ; duração padrão
+            MOVL R10, 150
+            PLAY R10, R8, R7
+
             ; Inimigo abatido, sem necessidade de verificar mais
             BEQ R0, R0, NEXT_ENEMY_DRAW
 
