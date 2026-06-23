@@ -93,7 +93,7 @@ void VM::runInstr() {
   } else if (opcode <= 0x2B) {
     this->execTypeS(instr, opcode);
   } else {
-    printf("Unknown opcode: 0x%X\n", opcode);
+    printf("Unknown opcode, not a instruct type: 0x%X\n", opcode);
     exit(1);
   }
 }
@@ -126,7 +126,7 @@ void VM::run() {
 
     // elapsed time since the start of the frame
     // frametime
-    // o controle de tempo parece ser obrigatório para manter o 60 fps
+    // o controle de tempo é obrigatório para manter o 60 fps
 
     uint32_t eTime = SDL_GetTicks() - sTime;
     uint32_t fTime = 1000 / this->FPS; // Tempo ideal por frame em ms
@@ -143,7 +143,7 @@ void VM::execTypeR(uint32_t instr, uint32_t opcode) {
   uint32_t i_rd = (instr >> 22) & 0xF;
   uint32_t i_rs = (instr >> 18) & 0xF;
   uint32_t i_rt = (instr >> 14) & 0xF;
-  
+
   switch (opcode) {
   // Arithmetic and logical instructions (type R, except for ADDI)
   case ADD:
@@ -517,7 +517,8 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case RAND: {
-    this->regs[i_ra] = rand() % this->regs[i_rb] + this->regs[i_rc];
+    this->regs[i_ra] = rand() % (this->regs[i_rc] + 1) + this->regs[i_rb];
+
     break;
   }
 
