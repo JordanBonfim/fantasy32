@@ -20,7 +20,8 @@
 bullet_active: .space 10  ; 1 = ativo, 0 = livre para atirar
 bullet_x:      .space 10  ; Posição X
 bullet_y:      .space 10  ; Posição Y
-bullet_counter: .var 0
+bullet_counter: .var 10
+bullet_cooldown: .var 0
 
 enemy_counter: .var 0
 enemy_x:      .space 10  ; Posição X
@@ -59,6 +60,9 @@ enemy_ship_sprite:
 black_enemy_ship_sprite:
 .array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF000100, 0xFF010001, 0xFF010001, 0xFF000101, 0xFF000101, 0xFF000100, 0xFF010100, 0xFF000001, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000100, 0xFF010001, 0xFF010100, 0xFF000100, 0xFF000000, 0xFF000101, 0xFF000000, 0xFF010101, 0xFF000100, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000101, 0xFF000000, 0xFF010001, 0xFF010101, 0xFF000101, 0xFF000100, 0xFF010100, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010100, 0xFF000001, 0xFF000000, 0xFF010001, 0xFF010101, 0xFF000101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF000100, 0xFF000001, 0xFF000100, 0xFF000101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF010101, 0xFF000000, 0xFF000001, 0xFF010000, 0xFF010000, 0xFF000000, 0xFF000000, 0xFF000100, 0xFF000100, 0xFF000101, 0xFF000100, 0xFF000000, 0xFF000100, 0x00000000, 0x00000000, 0xFF010100, 0xFF000100, 0xFF010000, 0xFF010100, 0xFF010001, 0xFF010101, 0xFF000101, 0xFF010000, 0xFF000000, 0xFF000001, 0xFF010000, 0xFF000000, 0xFF000000, 0xFF010101, 0x00000000, 0x00000000, 0x00000000, 0xFF010001, 0xFF010001, 0xFF000100, 0xFF010001, 0xFF000101, 0xFF010000, 0xFF000001, 0xFF000001, 0xFF010001, 0xFF010000, 0xFF010000, 0xFF000100, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010100, 0x00000000, 0xFF010101, 0xFF000001, 0xFF000100, 0xFF010001, 0xFF010101, 0xFF000001, 0xFF010000, 0xFF010101, 0x00000000, 0xFF000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000100, 0xFF000100, 0xFF010100, 0xFF010000, 0xFF010001, 0xFF010101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000100, 0xFF000101, 0xFF000101, 0xFF000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF000100, 0xFF000101, 0xFF000100, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
 
+bullet_sprite:
+.array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF000001, 0xFF000000, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010000, 0xFF000000, 0xFFB4B4B4, 0xFFB4B4B4, 0xFF000100, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF010000, 0xFFB4B5B4, 0xFFB4B4B4, 0xFFB5B4B4, 0xFFB4B5B4, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20F, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFEC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFFFFF, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFEC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFFFFE, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20E, 0xFFFEC20E, 0xFFFFC30E, 0xFFFFFFFE, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF000100, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFF7E00, 0xFFFF7F00, 0xFFFF7E00, 0xFFFE7E00, 0xFFFF7F00, 0xFFFF7E01, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFE7E00, 0xFFFF7F00, 0xFFFF7E00, 0xFFFF7E00, 0xFFFF7E00, 0xFFFF7E00, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF000100, 0xFF000001, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000
+
 
 .text
 START:
@@ -87,25 +91,40 @@ START:
     PINT R1, R2, R4, R3
 
     
+    MOVL R12, bullet_sprite.l
+    MOVH R12, bullet_sprite.h
+    
+    MOVL R1, 300                    ; X
+    MOVL R3, 12                     ; Largura (W)
+
+    MOVL R2, 200                    ; Y
+    DSPRITE R1, R2, R3, R3, R12     ; Desenha na nova coordenada
+
+    MOVL R2, 185                    ; Y
+    DSPRITE R1, R2, R3, R3, R12     ; Desenha na nova coordenada
+
+    MOVL R2, 170                    ; Y
+    DSPRITE R1, R2, R3, R3, R12     ; Desenha na nova coordenada
+
+    MOVL R2, 155                    ; Y
+    DSPRITE R1, R2, R3, R3, R12     ; Desenha na nova coordenada
+
+
     MOVL R12, heart_sprite.l
     MOVH R12, heart_sprite.h
-    
     MOVL R1, 10                     ; X
     MOVL R2, 200                    ; Y
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
-    MOVL R1, 10                     ; X
     MOVL R2, 180                    ; Y
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
-    MOVL R1, 10                     ; X
     MOVL R2, 160                    ; Y
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
-    MOVL R1, 10                     ; X
     MOVL R2, 140                    ; Y
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
@@ -401,10 +420,96 @@ DRAW_STARS_BACKGROUND:
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
+    
+
+
+
+
+    MOVL R12, bullet_sprite.l
+    MOVH R12, bullet_sprite.h
+
+    MOVL R3, bullet_counter.l
+    MOVH R3, bullet_counter.h
+    LOAD R4, R3, 0 
+
+
+    MOVL R1, 300                     ; X
+    MOVL R3, 12                      ; Largura (W)
+
+    MOVL R8, 10
+    BULLET_10:     
+    BLE R4, R8, BULLET_9
+    MOVL R2, 65
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_9:
+    DEC R8  
+    BLE R4, R8, BULLET_8   
+    MOVL R2, 80
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_8:  
+    DEC R8 
+    BLE R4, R8, BULLET_7 
+    MOVL R2, 95
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_7:
+    DEC R8     
+    BLE R4, R8, BULLET_6
+    MOVL R2, 110
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_6:
+    DEC R8     
+    BLE R4, R8, BULLET_5
+    MOVL R2, 125
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_5:
+    DEC R8     
+    BLE R4, R8, BULLET_4
+    MOVL R2, 140
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_4:
+    DEC R8     
+    BLE R4, R8, BULLET_3
+    MOVL R2, 155
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_3:
+    DEC R8     
+    BLE R4, R8, BULLET_2
+    MOVL R2, 170
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_2:
+    DEC R8     
+    BLE R4, R8, BULLET_1
+    MOVL R2, 185
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_1:
+    DEC R8     
+    BLE R4, R8, BULLET_0
+    MOVL R2, 200
+    DSPRITE R1, R2, R3, R3, R12
+
+    BULLET_0:
+
+
+
+
+
+
+
+
+
+
     AND R1, R0, R0      ; Enemy index = 0
     MOVL R3, enemy_active.l
     MOVH R3, enemy_active.h
-
 
     DRAW_ENEMIES:
         LOAD R4, R3, 0                  ; Verifica se o inimigo atual está ativo
@@ -512,6 +617,35 @@ DRAW_STARS_BACKGROUND:
             ; APAGA O INIMIGO
             MOVL R10, 16                    ; W/H do inimigo
             RECT R5, R6, R10, R10, R13
+
+
+
+            PUSH R1
+            PUSH R2
+            PUSH R3
+            PUSH R4
+            PUSH R5
+            
+                ; APAGAR TIROS DIREITA
+            MOVL R1, 300                      ; x
+            MOVL R2, 0                      ; y
+            MOVL R3, 12                      ; Largura (W)
+            MOVL R4, 200                      ; Altura (H)
+            MOVL R5, PRETO.l               
+            MOVH R5, PRETO.h
+            RECT R1, R2, R3, R4, R5 
+
+            MOVL R1, bullet_counter.l
+            MOVH R1, bullet_counter.h
+            LOAD R3, R1, 0
+            INC R3
+            STORE R3, R1, 0 
+
+            POP R5
+            POP R4
+            POP R3
+            POP R2
+            POP R1
 
             ; Desativa as entidades na memória
             STORE R0, R4, 0                 ; bullet_active[i] = 0
@@ -656,6 +790,33 @@ DRAW_STARS_BACKGROUND:
         ; R3 ainda aponta para o endereço no array
         STORE R0, R3, 0
 
+        PUSH R1
+        PUSH R2
+        PUSH R3
+        PUSH R4
+        PUSH R5
+        
+            ; APAGAR TIROS DIREITA
+        MOVL R1, 300                      ; x
+        MOVL R2, 0                      ; y
+        MOVL R3, 12                      ; Largura (W)
+        MOVL R4, 200                      ; Altura (H)
+        MOVL R5, PRETO.l               
+        MOVH R5, PRETO.h
+        RECT R1, R2, R3, R4, R5 
+
+        MOVL R1, bullet_counter.l
+        MOVH R1, bullet_counter.h
+        LOAD R3, R1, 0
+        INC R3
+        STORE R3, R1, 0 
+
+        POP R5
+        POP R4
+        POP R3
+        POP R2
+        POP R1    
+
     NEXT_BULLET_DRAW:
         ADDI R3, R3, 4                  ; Avança para o próximo endereço de bullet_active
         INC R1                          ; Incrementa o contador de índice
@@ -781,8 +942,8 @@ GAME:
     STORE R5, R4, 0      ; Atualiza o movement_frame_counter com o novo frame
 
     MANAGE_COOLDOWN:
-        MOVL R11, bullet_counter.l
-        MOVH R11, bullet_counter.h
+        MOVL R11, bullet_cooldown.l
+        MOVH R11, bullet_cooldown.h
         LOAD R12, R11, 0
         BEQ R12, R0, SPACE_KEY_INPUT    ; Se o cooldown for 0, pronto pra atirar
         DEC R12                         ; Se for maior que 0, espera 1 frame
@@ -811,9 +972,10 @@ GAME:
         BEQ R0, R0, MOVE_PLAYER         ; Se não achou nenhuma, sai
 
         INACTIVE_BULLET_FOUND:
-            MOVL R12, 5                    ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
-            MOVL R11, bullet_counter.l
-            MOVH R11, bullet_counter.h
+
+            MOVL R12, 5                  ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
+            MOVL R11, bullet_cooldown.l
+            MOVH R11, bullet_cooldown.h
             STORE R12, R11, 0               ; Ativa cooldown para o próximo tiro
 
             ; Ativa a bala na memória (R3 já aponta para bullet_active[i])
@@ -844,6 +1006,33 @@ GAME:
             MOVH R11, bullet_y.h
             ADD R11, R11, R9                ; Endereço = base de bullet_y + offset
             STORE R10, R11, 0               ; Mem[bullet_y + (i*4)] = player_y
+
+            PUSH R1
+            PUSH R2
+            PUSH R3
+            PUSH R4
+            PUSH R5
+        
+            ; APAGAR TIROS DIREITA
+            MOVL R1, 300                      ; x
+            MOVL R2, 0                      ; y
+            MOVL R3, 12                      ; Largura (W)
+            MOVL R4, 200                      ; Altura (H)
+            MOVL R5, PRETO.l               
+            MOVH R5, PRETO.h
+            RECT R1, R2, R3, R4, R5 
+
+            MOVL R1, bullet_counter.l
+            MOVH R1, bullet_counter.h
+            LOAD R3, R1, 0
+            DEC R3
+            STORE R3, R1, 0 
+
+            POP R5
+            POP R4
+            POP R3
+            POP R2
+            POP R1
 
             BEQ R0, R0, MOVE_PLAYER         ; Retorna ao fluxo de movimento
 
@@ -934,4 +1123,3 @@ END_GAME:
 
 
 
-    BEQ R0, R0, END_GAME
