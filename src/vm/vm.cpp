@@ -17,11 +17,13 @@ struct AudioState {
   std::atomic<double> phase;
 };
 
-VM::VM() {
+VM::VM(int scale, bool no_syscall) {
   this->mem = new uint8_t[S_MEM];
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
   this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
+
+  this->no_syscall = no_syscall;
 
   // Usando o sdl para cria um janela, cria e criar uma textura, e nela
   // renderizar os pixels da memória de vídeo
@@ -61,7 +63,7 @@ bool VM::writeMem(uint32_t addr, uint32_t value) {
   return true;
 }
 
-void VM::load(char *arqBin) {
+void VM::load(const char *arqBin) {
   FILE *bin = fopen(arqBin, "rb");
   fseek(bin, 0, SEEK_END);
   int binSize = ftell(bin) - sizeof(uint32_t);
@@ -417,7 +419,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
         }
         uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
         if (color != 0x00000000) {
-            base[(y + row) * w + (x + col)] = color;
+          base[(y + row) * w + (x + col)] = color;
         }
       }
     }
@@ -472,6 +474,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case SYSCALL: {
+    if (this->no_syscall) {
+      break;
+    }
+
     uint32_t code = this->regs[i_ra];
     uint32_t arg1 = this->regs[i_rb];
     // uint32_t arg2 = this->regs[i_rc];
@@ -527,7 +533,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   case RAND: {
     uint32_t min = this->regs[i_rb];
     uint32_t max = this->regs[i_rc];
-    
+
     this->regs[i_ra] = min + (rand() % (max - min + 1));
     break;
   }

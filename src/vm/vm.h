@@ -13,6 +13,8 @@ private:
   uint32_t sleepUntil = 0;
   uint32_t frame_number = 0;
 
+  bool no_syscall;
+
   int32_t regs[16];
   uint8_t *mem;
   // start and end of the video memory
@@ -38,16 +40,15 @@ private:
   SDL_Window *window = nullptr;
   SDL_Renderer *renderer = nullptr;
   SDL_Texture *texture = nullptr;
-  int scale = 3; // Fator de escala padrão
 
   // AUDIO
   AudioState *m_audio = nullptr;
 
 public:
-  VM();
+  VM(int scale = 1, bool no_syscall = false);
   ~VM();
   bool isRunning() const { return running; }
-  void load(char *arqBin);
+  void load(const char *arqBin);
   void run();
   void runInstr() __attribute__((hot));
   void render();

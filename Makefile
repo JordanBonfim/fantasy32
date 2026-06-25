@@ -7,6 +7,7 @@ SRC_DIRS := src/vm src/game src/utils
 BUILD_DIR := build
 TARGET    := $(BUILD_DIR)/app
 BIN ?= src/assembler/prog1.bin
+ARGS ?=
 ASSEMBLER := src/assembler/assembler
 TETRIS_BIN := $(BUILD_DIR)/tetris
 SPACE-SHOOTER_BIN := $(BUILD_DIR)/space-shooter
@@ -19,17 +20,26 @@ DEPS := $(OBJS:.o=.d)
 all: $(TARGET)
 
 run: $(TARGET)
-	$(TARGET) $(BIN)
+	$(TARGET) $(ARGS) $(BIN)
+
+compilar-tetris: $(TARGET)
+	mkdir -p $(BUILD_DIR)
+	$(ASSEMBLER) src/game/tetris/tetris.asm $(TETRIS_BIN)
 
 tetris: $(TARGET)
 	mkdir -p $(BUILD_DIR)
 	$(ASSEMBLER) src/game/tetris/tetris.asm $(TETRIS_BIN)
-	$(TARGET) $(TETRIS_BIN)
+	$(TARGET) $(ARGS) $(TETRIS_BIN)
+
+compilar-space-shooter: $(TARGET)
+	mkdir -p $(BUILD_DIR)
+	$(ASSEMBLER) src/game/space-shooter/space_shooter.asm $(SPACE-SHOOTER_BIN)
 
 space-shooter: $(TARGET)
 	mkdir -p $(BUILD_DIR)
 	$(ASSEMBLER) src/game/space-shooter/space_shooter.asm $(SPACE-SHOOTER_BIN)
-	$(TARGET) $(SPACE-SHOOTER_BIN)
+	$(TARGET) $(ARGS) $(SPACE-SHOOTER_BIN)
+
 
 $(TARGET): $(OBJS)
 	$(CXX) $^ -o $@ $(SDL_LIBS)
