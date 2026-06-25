@@ -7,47 +7,13 @@
 .equ DOWN_ARROW_KEYCODE, 0x03
 .equ SPACE_KEYCODE, 0x04
 
+.equ VERDE, 0xFF00FF00
 .equ AZUL, 0xFF0000FF
 .equ PRETO, 0xFF000000
 .equ BRANCO, 0xFFFFFFFF
 .equ VERMELHO, 0xFFFF0000
 .equ AMARELO, 0xFFFFDE33
 .equ TRANSPARENTE, 0x00000000           
-
-
-.equ MAX_BULLETS, 10
-; Cada tiro usa 1 palavra (32 bits) em cada array
-bullet_active: .space 10  ; 1 = ativo, 0 = livre para atirar
-bullet_x:      .space 10  ; Posição X
-bullet_y:      .space 10  ; Posição Y
-bullet_counter: .var 10
-bullet_cooldown: .var 0
-
-enemy_counter: .var 0
-enemy_x:      .space 10  ; Posição X
-enemy_y:      .space 10  ; Posição Y
-enemies_speed: .var 1
-enemy_active: .space 5
-
-player_x: .var 70
-player_y: .var 200
-movement_frame_counter: .var 0
-enemy_frame_counter: .var 0
-enemy_spawn_timeout: .var 3
-
-player_health: .var 5
-
-heart_sprite:
-.array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1C25, 0xFFEC1C25, 0xFFFFFEFF, 0xFFEC1D24, 0x00000000, 0xFFEC1C24, 0xFFEC1C25, 0xFFED1C25, 0xFFED1C24, 0xFFEC1C24, 0xFFED1C24, 0xFFED1C25, 0xFFEC1C24, 0xFFFFFEFE, 0xFFED1D25, 0xFFED1C24, 0xFFED1D24, 0xFFED1C25, 0xFFED1C25, 0xFFEC1C25, 0xFFED1D25, 0xFFEC1C24, 0xFFED1D24, 0xFFFFFEFE, 0xFFED1D24, 0xFF9D5B3D, 0xFFEC1C24, 0xFFED1C25, 0xFFED1D24, 0xFFEC1D25, 0xFFED1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0xFF9D5B3C, 0xFFED1D25, 0xFFED1D24, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C24, 0xFFEC1D24, 0xFFED1C24, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFEC1C25, 0xFFEC1C25, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFED1D24, 0xFFED1D24, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9C5B3D, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000
-
-
-msg: .string "WELCOME TO DOOMSHIP!"
-start_message: .string "PRESS SPACE TO LAUNCH!"
-END_STRING: .string "YOU LOSE!"
-
-score: .var 0
-
-
 
 black_ship_sprite:
 .array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000100, 0xFF000001, 0xFF010001, 0xFF010001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF000001, 0xFF010001, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010100, 0xFF010001, 0xFF010001, 0xFF010101, 0xFF010001, 0xFF000100, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0x00000000, 0xFF010101, 0xFF010000, 0xFF000000, 0xFF000001, 0xFF000100, 0xFF010001, 0xFF000100, 0xFF010000, 0x00000000, 0xFF000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF010000, 0xFF010100, 0xFF010000, 0xFF010101, 0xFF010100, 0xFF000001, 0xFF010001, 0xFF000100, 0xFF000000, 0xFF010100, 0xFF010001, 0x00000000, 0x00000000, 0x00000000, 0xFF010000, 0xFF000000, 0xFF000000, 0xFF000001, 0xFF000100, 0xFF000001, 0xFF010100, 0xFF010100, 0xFF010100, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010000, 0xFF000001, 0x00000000, 0x00000000, 0xFF010001, 0xFF000000, 0xFF010100, 0xFF010000, 0xFF000001, 0xFF010101, 0xFF010100, 0xFF010001, 0xFF000000, 0xFF000101, 0xFF000100, 0xFF000001, 0xFF010001, 0xFF000101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010001, 0xFF000101, 0xFF010100, 0xFF000000, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000100, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010101, 0xFF000101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF010100, 0xFF000001, 0xFF000000, 0xFF010101, 0xFF000101, 0xFF000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010101, 0xFF000000, 0xFF010001, 0xFF010101, 0xFF000101, 0xFF000100, 0xFF010000, 0xFF010001, 0xFF000001, 0xFF000100, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010001, 0xFF000101, 0xFF000001, 0xFF000000, 0xFF000001, 0xFF000100, 0xFF010100, 0xFF010000, 0xFF010000, 0xFF000101, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
@@ -64,40 +30,413 @@ black_enemy_ship_sprite:
 bullet_sprite:
 .array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF000001, 0xFF000000, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF010000, 0xFF000000, 0xFFB4B4B4, 0xFFB4B4B4, 0xFF000100, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFF010000, 0xFFB4B5B4, 0xFFB4B4B4, 0xFFB5B4B4, 0xFFB4B5B4, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20F, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFEC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFFFFF, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFEC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFFFFE, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20E, 0xFFFEC20E, 0xFFFFC30E, 0xFFFFFFFE, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFFC20E, 0xFFFFC30E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFFFFC20E, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF000100, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFFFF7E00, 0xFFFF7F00, 0xFFFF7E00, 0xFFFE7E00, 0xFFFF7F00, 0xFFFF7E01, 0xFF010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000000, 0xFFFE7E00, 0xFFFF7F00, 0xFFFF7E00, 0xFFFF7E00, 0xFFFF7E00, 0xFFFF7E00, 0xFF000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF000001, 0xFF010000, 0xFF000100, 0xFF000001, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF010000, 0x00000000, 0x00000000
 
+heart_sprite:
+.array 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0x00000000, 0x00000000, 0x00000000, 0xFFED1D25, 0xFFEC1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1C25, 0xFFEC1C25, 0xFFFFFEFF, 0xFFEC1D24, 0x00000000, 0xFFEC1C24, 0xFFEC1C25, 0xFFED1C25, 0xFFED1C24, 0xFFEC1C24, 0xFFED1C24, 0xFFED1C25, 0xFFEC1C24, 0xFFFFFEFE, 0xFFED1D25, 0xFFED1C24, 0xFFED1D24, 0xFFED1C25, 0xFFED1C25, 0xFFEC1C25, 0xFFED1D25, 0xFFEC1C24, 0xFFED1D24, 0xFFFFFEFE, 0xFFED1D24, 0xFF9D5B3D, 0xFFEC1C24, 0xFFED1C25, 0xFFED1D24, 0xFFEC1D25, 0xFFED1D24, 0xFFEC1C24, 0xFFED1D25, 0xFFED1D24, 0xFFED1D25, 0x00000000, 0xFF9D5B3C, 0xFFED1D25, 0xFFED1D24, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C24, 0xFFEC1D24, 0xFFED1C24, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFEC1C25, 0xFFEC1C25, 0xFFED1D24, 0xFFED1D24, 0xFFEC1C25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9D5B3D, 0xFFED1D24, 0xFFED1D24, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xFF9C5B3D, 0xFFEC1D25, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+
+
+
+.equ MAX_BULLETS, 10
+; Cada tiro usa 1 palavra (32 bits) em cada array
+bullet_active: .space 10  ; 1 = ativo, 0 = livre para atirar
+bullet_x:      .space 10  ; Posição X
+bullet_y:      .space 10  ; Posição Y
+bullet_counter: .var 10
+bullet_cooldown: .var 0
+
+enemy_counter: .var 0
+enemy_x:      .space 10  ; Posição X
+enemy_y:      .space 10  ; Posição Y
+enemies_speed: .var 1
+enemy_active: .space 5
+
+player_x: .var 152
+player_y: .var 200
+enemy_frame_counter: .var 0
+enemy_spawn_timeout: .var 3
+
+player_health: .var 5
+movement_frame_counter: .var 0
+
+
+msg: .string "WELCOME TO DOOMSHIP!"
+start_message: .string "PRESS SPACE TO LAUNCH!"
+END_STRING: .string "YOU LOSE!"
+best_score_str: .string "Best score:"
+last_score_str: .string "Last score:"
+
+score: .var 0
+best_score: .var 0
+
+play_again: .string "Play Again!"
+exit: .string "Exit"
 
 .text
+
+BEQ R0, R0, END_GAME 
+
+FUNCTIONS_SPACE:
+
+SET_BEST_SCORE:
+    ; R9 = score
+    ; R6 = best score
+    BLE R9, R6, SET_BEST_SCORE_RETURN
+    STORE R9, R7, 0
+    SET_BEST_SCORE_RETURN:
+    RET
+
+DRAW_OPTION_SCREEN:
+    MOVL R1, PRETO.l
+    MOVH R1, PRETO.h
+    CLEAR R1
+
+    CALL DRAW_STARS_BACKGROUND
+    MOVL R1, 10
+    MOVL R2, 10
+    MOVL R3, 130
+    MOVL R4, 40
+    MOVL R8, PRETO.l
+    MOVH R8, PRETO.h
+    RECT R1, R2, R3, R4, R8
+
+
+    MOVL R7, best_score.l         
+    MOVH R7, best_score.h          
+    LOAD R6, R7, 0
+
+    MOVL R8, score.l         
+    MOVH R8, score.h          
+    LOAD R9, R8, 0
+
+
+    ;; DRAW A PERFECT FINAL SCREEN
+    ; DRAW SPACE SHIP
+    MOVL R1, 280
+    MOVL R2, 192
+    MOVL R3, 16
+    MOVL R4, 16
+    MOVL R5, ship_sprite.l
+    MOVH R5, ship_sprite.h
+    DSPRITE R1, R2, R3, R4, R5       
+
+    ; DRAW SPACE SHIP
+    MOVL R1, 290
+    MOVL R2, 89
+    MOVL R3, 16
+    MOVL R4, 16
+    MOVL R5, enemy_ship_sprite.l
+    MOVH R5, enemy_ship_sprite.h
+    DSPRITE R1, R2, R3, R4, R5       
+
+    ; DRAW SPACE SHIP
+    MOVL R1, 20
+    MOVL R2, 150
+    MOVL R3, 16
+    MOVL R4, 16
+    MOVL R5, enemy_ship_sprite.l
+    MOVH R5, enemy_ship_sprite.h
+    DSPRITE R1, R2, R3, R4, R5      
+
+    ; bullets
+    MOVL R1, 290
+    MOVL R2, 130
+    MOVL R3, 2
+    MOVL R4, 6
+    MOVL R8, VERMELHO.l
+    MOVH R8, VERMELHO.h
+    RECT R1, R2, R3, R4, R8
+
+    MOVL R1, 287
+    MOVL R2, 180
+    MOVL R3, 2
+    MOVL R4, 6
+    MOVL R8, VERMELHO.l
+    MOVH R8, VERMELHO.h
+    RECT R1, R2, R3, R4, R8
+
+    MOVL R1, 278
+    MOVL R2, 90
+    MOVL R3, 2
+    MOVL R4, 6
+    MOVL R8, VERMELHO.l
+    MOVH R8, VERMELHO.h
+    RECT R1, R2, R3, R4, R8
+
+    MOVL R1, 267
+    MOVL R2, 20
+    MOVL R3, 2
+    MOVL R4, 6
+    MOVL R8, VERMELHO.l
+    MOVH R8, VERMELHO.h
+    RECT R1, R2, R3, R4, R8
+
+    CALL SET_BEST_SCORE
+    ; PRINT BEST SCORE
+    MOVL R5, 10                        ; x 
+    MOVL R6, 10                        ; y 
+    MOVL R7, best_score_str.l          ; endereço da string (parte baixa)
+    MOVH R7, best_score_str.h          ; endereço da string (parte alta)
+    MOVL R8, VERDE.l         
+    MOVH R8, VERDE.h         
+    PSTR R5, R6, R7, R8
+
+    ; PRINT BEST SCORE
+    MOVL R7, best_score.l
+    MOVH R7, best_score.h
+    LOAD R4, R7, 0    
+    MOVL R1, 99
+    MOVL R2, 10
+    MOVL R3, VERDE.l       
+    MOVH R3, VERDE.h         
+    PINT R1, R2, R4, R3
+
+    
+    ; PRINT LAST SCORE
+
+    MOVL R5, 10                    ; x 
+    MOVL R6, 30                    ; y
+    MOVL R7, last_score_str.l          ; endereço da string (parte baixa)
+    MOVH R7, last_score_str.h          ; endereço da string (parte alta)
+    MOVL R8, AMARELO.l         
+    MOVH R8, AMARELO.h         
+    PSTR R5, R6, R7, R8
+
+    ; PRINT LAST SCORE
+    MOVL R7, score.l
+    MOVH R7, score.h
+    LOAD R4, R7, 0    
+    MOVL R1, 99
+    MOVL R2, 30
+    MOVL R3, AMARELO.l       
+    MOVH R3, AMARELO.h         
+    PINT R1, R2, R4, R3
+
+
+
+    MOVL R5, 116                    ; x 
+    MOVL R6, 80                    ; y
+    MOVL R7, play_again.l          ; endereço da string (parte baixa)
+    MOVH R7, play_again.h          ; endereço da string (parte alta)
+    MOVL R8, AMARELO.l             ; color
+    MOVH R8, AMARELO.h             ; color
+    PSTR R5, R6, R7, R8
+
+
+    MOVL R5, 144              ; x 
+    MOVL R6, 100              ; y 
+    MOVL R7, exit.l          ; endereço da string (parte baixa)
+    MOVH R7, exit.h          ; endereço da string (parte alta)
+    MOVL R8, BRANCO.l        ; color 
+    MOVH R8, BRANCO.h        ; color 
+    PSTR R5, R6, R7, R8
+    RET
+
+ERASE_RIGHT_BULLETS_DEC:
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+        
+    ; APAGAR TIROS DIREITA
+    MOVL R1, 300                      ; x
+    MOVL R2, 0                      ; y
+    MOVL R3, 12                      ; Largura (W)
+    MOVL R4, 200                      ; Altura (H)
+    MOVL R5, PRETO.l               
+    MOVH R5, PRETO.h
+    RECT R1, R2, R3, R4, R5
+    MOVL R1, bullet_counter.l
+    MOVH R1, bullet_counter.h
+    LOAD R3, R1, 0
+    DEC R3
+    STORE R3, R1, 0
+    POP R5
+    POP R4
+    POP R3
+    POP R2
+    POP R1
+    RET
+
+ERASE_RIGHT_BULLETS_INC:
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+        
+    ; APAGAR TIROS DIREITA
+    MOVL R1, 300                      ; x
+    MOVL R2, 0                      ; y
+    MOVL R3, 12                      ; Largura (W)
+    MOVL R4, 200                      ; Altura (H)
+    MOVL R5, PRETO.l               
+    MOVH R5, PRETO.h
+    RECT R1, R2, R3, R4, R5
+    MOVL R1, bullet_counter.l
+    MOVH R1, bullet_counter.h
+    LOAD R3, R1, 0
+    INC R3
+    STORE R3, R1, 0
+    POP R5
+    POP R4
+    POP R3
+    POP R2
+    POP R1
+    RET
+
+DRAW_STARS_BACKGROUND:
+    MOVL R7, 2 ; STAR SIZE
+
+    MOVL R8, BRANCO.l
+    MOVH R8, BRANCO.h
+
+    ; Linha superior
+    ; MOVL R1, 10
+    ; MOVL R2, 10
+    ; RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 45
+    MOVL R2, 25
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 80
+    MOVL R2, 15
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 130
+    MOVL R2, 35
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 180
+    MOVL R2, 18
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 240
+    MOVL R2, 40
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 300
+    MOVL R2, 12
+    RECT R1, R2, R7, R7, R8
+
+    ; Linha do meio
+    MOVL R1, 25
+    MOVL R2, 70
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 90
+    MOVL R2, 90
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 150
+    MOVL R2, 75
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 210
+    MOVL R2, 100
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 280
+    MOVL R2, 65
+    RECT R1, R2, R7, R7, R8
+
+    ; Próximo ao horizonte
+    MOVL R1, 40
+    MOVL R2, 130
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 100
+    MOVL R2, 145
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 170
+    MOVL R2, 120
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 230
+    MOVL R2, 150
+    RECT R1, R2, R7, R7, R8
+
+    MOVL R1, 295
+    MOVL R2, 135
+    RECT R1, R2, R7, R7, R8
+    RET
+
+
 START:
+    
+
+    ;RESTART VARIABLES
+    MOVL R1, player_health.l
+    MOVH R1, player_health.h
+    MOVL R2, 5
+    STORE R2, R1, 0
+
+ 
+    MOVL R1, score.l
+    MOVH R1, score.h
+    STORE R0, R1, 0
+
+
+    MOVL R1, bullet_counter.l
+    MOVH R1, bullet_counter.h
+    MOVL R2, 10
+    STORE R2, R1, 0
+
+
+    AND R1, R0, R0
+    MOVL R2, enemy_active.l
+    MOVH R2, enemy_active.h
+    CLEAR_ENEMIES_LOOP:
+        STORE R0, R2, 0
+        ADDI R2, R2, 4
+        INC R1
+        MOVL R3, 5
+        BLT R1, R3, CLEAR_ENEMIES_LOOP
+
+        ; 5. Purga o registro de tiros disparados
+        AND R1, R0, R0
+        MOVL R2, bullet_active.l
+        MOVH R2, bullet_active.h
+    CLEAR_BULLETS_LOOP:
+        STORE R0, R2, 0
+        ADDI R2, R2, 4
+        INC R1
+        MOVL R3, 10
+        BLT R1, R3, CLEAR_BULLETS_LOOP
+
     MOVL R5, PRETO.l
     MOVH R5, PRETO.h
     CLEAR R5
 
-    WAIT_FOR_USER_START:
+    ; WAIT_FOR_USER_START:
 
-        MOVL R8, AZUL.l         ; color = branco (ARGB)
-        MOVH R8, AZUL.h         ; color = branco (ARGB)
+    ;     MOVL R8, AZUL.l         ; color = branco (ARGB)
+    ;     MOVH R8, AZUL.h         ; color = branco (ARGB)
 
 
-        MOVL R5, 80            ; x = 160
-        MOVL R6, 60            ; y = 120
-        MOVL R7, msg.l          ; endereço da string (parte baixa)
-        MOVH R7, msg.h          ; endereço da string (parte alta)
+    ;     MOVL R5, 80            ; x = 160
+    ;     MOVL R6, 60            ; y = 120
+    ;     MOVL R7, msg.l          ; endereço da string (parte baixa)
+    ;     MOVH R7, msg.h          ; endereço da string (parte alta)
         
-        PSTR R5, R6, R7, R8 
+    ;     PSTR R5, R6, R7, R8 
 
-        MOVL R5, 80            ; x = 160
-        MOVL R6, 90            ; y = 120
-        MOVL R7, start_message.l          ; endereço da string (parte baixa)
-        MOVH R7, start_message.h          ; endereço da string (parte alta)
-        MOVL R8, BRANCO.l         ; color = branco (ARGB)
-        MOVH R8, BRANCO.h         ; color = branco (ARGB)
-        PSTR R5, R6, R7, R8 
-
-
-        MOVL R3, SPACE_KEYCODE 
-        GKEY R4, R3
-        BEQ R4, R0, WAIT_FOR_USER_START ; Se a barra de espaço não estiver pressionada fica em loop
+    ;     MOVL R5, 80            ; x = 160
+    ;     MOVL R6, 90            ; y = 120
+    ;     MOVL R7, start_message.l          ; endereço da string (parte baixa)
+    ;     MOVH R7, start_message.h          ; endereço da string (parte alta)
+    ;     MOVL R8, BRANCO.l         ; color = branco (ARGB)
+    ;     MOVH R8, BRANCO.h         ; color = branco (ARGB)
+    ;     PSTR R5, R6, R7, R8 
 
 
+    ;     MOVL R3, SPACE_KEYCODE 
+    ;     GKEY R4, R3
+    ;     BEQ R4, R0, WAIT_FOR_USER_START ; Se a barra de espaço não estiver pressionada fica em loop
+
+
+    
     MOVL R5, PRETO.l
     MOVH R5, PRETO.h
 
@@ -313,84 +652,10 @@ PLAY_INITIAL_MUSIC:
 
 
   
-    BEQ R0, R0, DRAW_STARS_BACKGROUND
+    BEQ R0, R0, GAME_LOOP
 
-DRAW_STARS_BACKGROUND:
-    MOVL R7, 2 ; STAR SIZE
-
-    MOVL R8, BRANCO.l
-    MOVH R8, BRANCO.h
-
-    ; Linha superior
-    ; MOVL R1, 10
-    ; MOVL R2, 10
-    ; RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 45
-    MOVL R2, 25
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 80
-    MOVL R2, 15
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 130
-    MOVL R2, 35
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 180
-    MOVL R2, 18
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 240
-    MOVL R2, 40
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 300
-    MOVL R2, 12
-    RECT R1, R2, R7, R7, R8
-
-    ; Linha do meio
-    MOVL R1, 25
-    MOVL R2, 70
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 90
-    MOVL R2, 90
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 150
-    MOVL R2, 75
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 210
-    MOVL R2, 100
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 280
-    MOVL R2, 65
-    RECT R1, R2, R7, R7, R8
-
-    ; Próximo ao horizonte
-    MOVL R1, 40
-    MOVL R2, 130
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 100
-    MOVL R2, 145
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 170
-    MOVL R2, 120
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 230
-    MOVL R2, 150
-    RECT R1, R2, R7, R7, R8
-
-    MOVL R1, 295
-    MOVL R2, 135
-    RECT R1, R2, R7, R7, R8
+GAME_LOOP:
+    CALL DRAW_STARS_BACKGROUND
 
     MOVL R5, 80            ; x = 160
     MOVL R6, 60            ; y = 120
@@ -445,12 +710,8 @@ DRAW_STARS_BACKGROUND:
     MOVL R2, 180                    ; Y
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
-
-    
-
     
     HEALTH_1:
-    
     DEC R8     
     BLE R4, R8, END_GAME
 
@@ -475,14 +736,19 @@ DRAW_STARS_BACKGROUND:
     MOVL R1, 300                     ; X
     MOVL R3, 12                      ; Largura (W)
 
-    MOVL R8, 10
-    BULLET_10:     
+    MOVL R8, 9
+    
+    
+    BULLET_10:    
     BLE R4, R8, BULLET_9
+    ; SYSCALL R0, R4, R0, R0, R0
     MOVL R2, 65
     DSPRITE R1, R2, R3, R3, R12
 
     BULLET_9:
     DEC R8  
+    ; SYSCALL R0, R4, R0, R0, R0
+    
     BLE R4, R8, BULLET_8   
     MOVL R2, 80
     DSPRITE R1, R2, R3, R3, R12
@@ -530,20 +796,11 @@ DRAW_STARS_BACKGROUND:
     DSPRITE R1, R2, R3, R3, R12
 
     BULLET_1:
-    DEC R8     
-    BLE R4, R8, BULLET_0
+    BLE R4, R0, BULLET_0
     MOVL R2, 200
     DSPRITE R1, R2, R3, R3, R12
 
     BULLET_0:
-
-
-
-
-
-
-
-
 
 
     AND R1, R0, R0      ; Enemy index = 0
@@ -659,32 +916,7 @@ DRAW_STARS_BACKGROUND:
 
 
 
-            PUSH R1
-            PUSH R2
-            PUSH R3
-            PUSH R4
-            PUSH R5
-            
-                ; APAGAR TIROS DIREITA
-            MOVL R1, 300                      ; x
-            MOVL R2, 0                      ; y
-            MOVL R3, 12                      ; Largura (W)
-            MOVL R4, 240                      ; Altura (H)
-            MOVL R5, PRETO.l               
-            MOVH R5, PRETO.h
-            RECT R1, R2, R3, R4, R5 
-
-            MOVL R1, bullet_counter.l
-            MOVH R1, bullet_counter.h
-            LOAD R3, R1, 0
-            INC R3
-            STORE R3, R1, 0 
-
-            POP R5
-            POP R4
-            POP R3
-            POP R2
-            POP R1
+            CALL ERASE_RIGHT_BULLETS_INC
 
             ; Desativa as entidades na memória
             STORE R0, R4, 0                 ; bullet_active[i] = 0
@@ -829,48 +1061,18 @@ DRAW_STARS_BACKGROUND:
         ; R3 ainda aponta para o endereço no array
         STORE R0, R3, 0
 
-        PUSH R1
-        PUSH R2
-        PUSH R3
-        PUSH R4
-        PUSH R5
-        
-            ; APAGAR TIROS DIREITA
-        MOVL R1, 300                      ; x
-        MOVL R2, 0                      ; y
-        MOVL R3, 12                      ; Largura (W)
-        MOVL R4, 200                      ; Altura (H)
-        MOVL R5, PRETO.l               
-        MOVH R5, PRETO.h
-        RECT R1, R2, R3, R4, R5 
-
-        MOVL R1, bullet_counter.l
-        MOVH R1, bullet_counter.h
-        LOAD R3, R1, 0
-        INC R3
-        STORE R3, R1, 0 
-
-        POP R5
-        POP R4
-        POP R3
-        POP R2
-        POP R1    
+        CALL ERASE_RIGHT_BULLETS_INC    
 
     NEXT_BULLET_DRAW:
         ADDI R3, R3, 4                  ; Avança para o próximo endereço de bullet_active
         INC R1                          ; Incrementa o contador de índice
-
         ; Verifica se já iterou por todas as balas
         MOVL R7, 10                     ; Carrega o valor de MAX_BULLETS diretamente
         BGE R1, R7, GAME                ; Se i >= 10, encerra o loop de desenho e vai para GAME
-
         BEQ R0, R0, DRAW_BULLETS        ; Retorna para desenhar a próxima bala
     
 
-
 GAME:
-
-
     
     ; PRINT SCORE
 
@@ -993,8 +1195,6 @@ GAME:
         MOVL R3, SPACE_KEYCODE 
         GKEY R4, R3
         BEQ R4, R0, MOVE_PLAYER ; Se a barra de espaço não estiver pressionada, move o player normalmente
-
-        
         AND R1, R0, R0                  ; R1 = Contador de índice (0 a 9)
         MOVL R3, bullet_active.l
         MOVH R3, bullet_active.h
@@ -1046,32 +1246,7 @@ GAME:
             ADD R11, R11, R9                ; Endereço = base de bullet_y + offset
             STORE R10, R11, 0               ; Mem[bullet_y + (i*4)] = player_y
 
-            PUSH R1
-            PUSH R2
-            PUSH R3
-            PUSH R4
-            PUSH R5
-        
-            ; APAGAR TIROS DIREITA
-            MOVL R1, 300                      ; x
-            MOVL R2, 0                      ; y
-            MOVL R3, 12                      ; Largura (W)
-            MOVL R4, 200                      ; Altura (H)
-            MOVL R5, PRETO.l               
-            MOVH R5, PRETO.h
-            RECT R1, R2, R3, R4, R5 
-
-            MOVL R1, bullet_counter.l
-            MOVH R1, bullet_counter.h
-            LOAD R3, R1, 0
-            DEC R3
-            STORE R3, R1, 0 
-
-            POP R5
-            POP R4
-            POP R3
-            POP R2
-            POP R1
+            CALL ERASE_RIGHT_BULLETS_DEC   
 
             BEQ R0, R0, MOVE_PLAYER         ; Retorna ao fluxo de movimento
 
@@ -1100,6 +1275,7 @@ GAME:
             ; LEFET LIMIT 
             BEQ R1, R0, RIGHT_ARROW
             DEC R1
+            DEC R1
 
         RIGHT_ARROW: 
             MOVL R3, RIGHT_ARROW_KEYCODE
@@ -1108,6 +1284,7 @@ GAME:
             ; RIGHT LIMIT 
             MOVL R8, 304
             BGE R1, R8, UP_ARROW
+            INC R1
             INC R1
 
         UP_ARROW: 
@@ -1138,27 +1315,79 @@ GAME:
             MOVH R5, ship_sprite.h
             DSPRITE R1, R2, R3, R4, R5       ; Desenha na nova coordenada
         
-    BEQ R0, R0, DRAW_STARS_BACKGROUND ; infinite loop
+    BEQ R0, R0, GAME_LOOP ; infinite loop
 
 
 
 
 
 END_GAME:
-    MOVL R1, PRETO.l
-    MOVH R1, PRETO.h
-    CLEAR R1
+    CALL DRAW_OPTION_SCREEN
+
+    MOVL R10, 0 ; SELECTED OPITION
+    MOVL R1, 1
+    END_SCREEN_LOOP:
 
 
+        SPACE_KEY_OPTION:
+            MOVL R3, SPACE_KEYCODE 
+            GKEY R4, R3
+            BEQ R4, R0, UP_ARROW_OPTION ; Se a barra de espaço não estiver pressionada, vai pra próxima
 
-    MOVL R5, 80            ; x = 160
-    MOVL R6, 60            ; y = 120
-    MOVL R7, END_STRING.l          ; endereço da string (parte baixa)
-    MOVH R7, END_STRING.h          ; endereço da string (parte alta)
-    MOVL R8, AZUL.l         ; color = branco (ARGB)
-    MOVH R8, AZUL.h         ; color = branco (ARGB)
-    PSTR R5, R6, R7, R8 
-
+            BEQ R10, R0, START
+            BEQ R10, R1, EXIT
 
 
+        UP_ARROW_OPTION: 
+            MOVL R3, UP_ARROW_KEYCODE
+            GKEY R4, R3
+            BEQ R4, R0, DOWN_ARROW_OPTION
+
+
+            MOVL R5, 116            ; x = 160
+            MOVL R6, 80            ; y = 120
+            MOVL R7, play_again.l          ; endereço da string (parte baixa)
+            MOVH R7, play_again.h          ; endereço da string (parte alta)
+            MOVL R8, AMARELO.l         ; color = branco (ARGB)
+            MOVH R8, AMARELO.h         ; color = branco (ARGB)
+            PSTR R5, R6, R7, R8
+
+
+            MOVL R5, 144              ; x 
+            MOVL R6, 100              ; y 
+            MOVL R7, exit.l          ; endereço da string (parte baixa)
+            MOVH R7, exit.h          ; endereço da string (parte alta)
+            MOVL R8, BRANCO.l         ; color = branco (ARGB)
+            MOVH R8, BRANCO.h         ; color = branco (ARGB)
+            PSTR R5, R6, R7, R8
+                
+            MOVL R10, 0
+            BEQ R0, R0, END_SCREEN_LOOP
+
+        DOWN_ARROW_OPTION: 
+            MOVL R3, DOWN_ARROW_KEYCODE
+            GKEY R4, R3
+            BEQ R4, R0, END_SCREEN_LOOP
+
+            MOVL R5, 116            ; x = 160
+            MOVL R6, 80            ; y = 120
+            MOVL R7, play_again.l          ; endereço da string (parte baixa)
+            MOVH R7, play_again.h          ; endereço da string (parte alta)
+            MOVL R8, BRANCO.l         ; color = branco (ARGB)
+            MOVH R8, BRANCO.h         ; color = branco (ARGB)
+            PSTR R5, R6, R7, R8
+
+            MOVL R5, 144              ; x 
+            MOVL R6, 100              ; y 
+            MOVL R7, exit.l          ; endereço da string (parte baixa)
+            MOVH R7, exit.h          ; endereço da string (parte alta)
+            MOVL R8, AMARELO.l         ; color = branco (ARGB)
+            MOVH R8, AMARELO.h         ; color = branco (ARGB)
+            PSTR R5, R6, R7, R8
+
+            MOVL R10, 1
+            BEQ R0, R0, END_SCREEN_LOOP
+
+EXIT:
+HALT
 
