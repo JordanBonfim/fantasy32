@@ -42,7 +42,7 @@ bullet_x:      .space 10  ; Posição X
 bullet_y:      .space 10  ; Posição Y
 bullet_counter: .var 10
 bullet_cooldown: .var 0
-
+bullet_speed: .var 2
 enemy_counter: .var 0
 enemy_x:      .space 10  ; Posição X
 enemy_y:      .space 10  ; Posição Y
@@ -52,7 +52,7 @@ enemy_active: .space 5
 player_x: .var 152
 player_y: .var 200
 enemy_frame_counter: .var 0
-enemy_spawn_timeout: .var 3
+enemy_spawn_timeout: .var 120
 
 player_health: .var 5
 movement_frame_counter: .var 0
@@ -232,55 +232,25 @@ DRAW_OPTION_SCREEN:
 
 ERASE_RIGHT_BULLETS_DEC:
     PUSH R1
-    PUSH R2
     PUSH R3
-    PUSH R4
-    PUSH R5
-        
-    ; APAGAR TIROS DIREITA
-    MOVL R1, 300                      ; x
-    MOVL R2, 0                      ; y
-    MOVL R3, 12                      ; Largura (W)
-    MOVL R4, 200                      ; Altura (H)
-    MOVL R5, PRETO.l               
-    MOVH R5, PRETO.h
-    RECT R1, R2, R3, R4, R5
     MOVL R1, bullet_counter.l
     MOVH R1, bullet_counter.h
     LOAD R3, R1, 0
     DEC R3
     STORE R3, R1, 0
-    POP R5
-    POP R4
     POP R3
-    POP R2
     POP R1
     RET
 
 ERASE_RIGHT_BULLETS_INC:
     PUSH R1
-    PUSH R2
     PUSH R3
-    PUSH R4
-    PUSH R5
-        
-    ; APAGAR TIROS DIREITA
-    MOVL R1, 300                      ; x
-    MOVL R2, 0                      ; y
-    MOVL R3, 12                      ; Largura (W)
-    MOVL R4, 200                      ; Altura (H)
-    MOVL R5, PRETO.l               
-    MOVH R5, PRETO.h
-    RECT R1, R2, R3, R4, R5
     MOVL R1, bullet_counter.l
     MOVH R1, bullet_counter.h
     LOAD R3, R1, 0
     INC R3
     STORE R3, R1, 0
-    POP R5
-    POP R4
     POP R3
-    POP R2
     POP R1
     RET
 
@@ -364,7 +334,6 @@ DRAW_STARS_BACKGROUND:
 
 
 START:
-    
 
     ;RESTART VARIABLES
     MOVL R1, player_health.l
@@ -720,10 +689,24 @@ GAME_LOOP:
     MOVL R3, 10                     ; Largura (W)
     DSPRITE R1, R2, R3, R3, R12       ; Desenha na nova coordenada
 
-    
-
-
-
+       
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
+    PUSH R5
+    MOVL R1, 300                    ; x
+    MOVL R2, 0                      ; y
+    MOVL R3, 12                     ; Largura (W)
+    MOVL R4, 200                    ; Altura (H)
+    MOVL R5, PRETO.l               
+    MOVH R5, PRETO.h
+    RECT R1, R2, R3, R4, R5 
+    POP R5
+    POP R4
+    POP R3
+    POP R2
+    POP R1
 
     MOVL R12, bullet_sprite.l
     MOVH R12, bullet_sprite.h
@@ -736,12 +719,11 @@ GAME_LOOP:
     MOVL R1, 300                     ; X
     MOVL R3, 12                      ; Largura (W)
 
+
+
     MOVL R8, 9
-    
-    
     BULLET_10:    
     BLE R4, R8, BULLET_9
-    ; SYSCALL R0, R4, R0, R0, R0
     MOVL R2, 65
     DSPRITE R1, R2, R3, R3, R12
 
@@ -799,6 +781,7 @@ GAME_LOOP:
     BLE R4, R0, BULLET_0
     MOVL R2, 200
     DSPRITE R1, R2, R3, R3, R12
+    ; SYSCALL R0, R4, R0, R0, R0
 
     BULLET_0:
 
@@ -914,10 +897,24 @@ GAME_LOOP:
             MOVL R10, 16                    ; W/H do inimigo
             RECT R5, R6, R10, R10, R13
 
+            ;; DECREASE ENEMY SPAWN TIMEOUT LOGIC
+            PUSH R1
+            PUSH R2
+            PUSH R10
+            MOVL R1, enemy_spawn_timeout.l
+            MOVH R1, enemy_spawn_timeout.h
 
+            LOAD R2, R1, 0
+            MOVL R10, 30                 ; Limite mínimo estrito para o spawn
+            BLE R2, R10, SKIP_TIMEOUT_DEC
+            DEC R2
+            STORE R2, R1, 0
+            SKIP_TIMEOUT_DEC:
+            POP R10
+            POP R2
+            POP R1
 
             CALL ERASE_RIGHT_BULLETS_INC
-
             ; Desativa as entidades na memória
             STORE R0, R4, 0                 ; bullet_active[i] = 0
             STORE R0, R3, 0                 ; enemy_active[i] = 0
@@ -982,6 +979,33 @@ GAME_LOOP:
             MOVL R9, 1
             ; SYSCALL R9, R7, R0, R0, R0
 
+
+
+            ; SOM DE TIRO DE TOMAR DANO 
+            ; Dá uma travadinha estética...
+            ; PUSH R1
+            ; PUSH R2
+            ; PUSH R3
+            ; PUSH R4
+            ; MOVL R3, 1   ; waveform = square
+            ; MOVL R4, 50      ; duração
+            ; MOVL R1, 659     ; E5
+            ; PLAY R1, R4, R3
+            ; SLEEP R4
+            ; MOVL R1, 523     ; C5
+            ; PLAY R1, R4, R3
+            ; SLEEP R4
+            ; MOVL R1, 392     ; G4
+            ; PLAY R1, R4, R3
+            ; SLEEP R4
+            ; MOVL R1, 262     ; C4
+            ; PLAY R1, R4, R3
+            ; SLEEP R4
+            ; POP R4
+            ; POP R3
+            ; POP R2
+            ; POP R1
+
             PUSH R1
             PUSH R2
             PUSH R3
@@ -1042,10 +1066,13 @@ GAME_LOOP:
         RECT R5, R6, R7, R8, R12        
 
         ; ATUALIZAR POSIÇÃO Y 
-        MOVL R12, 2                     ; Velocidade do projétil: sobe 2 pixels por frame
-        SUB R6, R6, R12                 
+        PUSH R1
+        MOVL R1, bullet_speed.l
+        MOVH R1, bullet_speed.h
+        LOAD R1, R1, 0   ; Velocidade do projétil: sobe 2 pixels por frame
+        SUB R6, R6, R1                 
         STORE R6, R11, 0                ; Salva a nova posição Y na memória
-
+        POP R1
         ; LIMITE DA TELA
         ; Se Y <= 0, desvia para a rotina de desativação
         BLE R6, R0, DEACTIVATE_BULLET 
@@ -1093,10 +1120,12 @@ GAME:
     LOAD R3, R4, 0       ; R3 = Guarda o último frame em que um inimigo apareceu
     FRAMENUM R5          ; R5 = Pega o frame atual do relógio
     
-    SUB R6, R5, R3       ; CORRIGIDO: Calcula tempo decorrido (R5 - R3)
+    SUB R6, R5, R3       ; Calcula tempo decorrido (R5 - R3)
     
-    MOVL R7, 120         ; 120 frames (2 segundos)
-    BLT R6, R7, DEPOIS   ; Se não deu o tempo, foge para o fim da lógica
+    MOVL R7, enemy_spawn_timeout.l
+    MOVH R7, enemy_spawn_timeout.h
+    LOAD R7, R7, 0         ; 120 frames 
+    BLT R6, R7, DEPOIS   ; Se não deu o tempo, vai para o fim da lógica
 
     
     ; Atualiza o relógio do spawn com o frame atual:
@@ -1105,8 +1134,7 @@ GAME:
     AND R1, R0, R0                  ; R1 = Index counter (0 a 4)
     MOVL R3, enemy_active.l
     MOVH R3, enemy_active.h
-    MOVL R12, 5                     ; R12 = MAX_ENEMIES
-    MOVL R8, 4
+    MOVL R12, 2                     ; R12 = MAX_ENEMIES
 
     FIND_ENEMY_INDEX:
         LOAD R4, R3, 0          
@@ -1119,12 +1147,9 @@ GAME:
         BEQ R0, R0, DEPOIS         ; If no inactive enemy found, proceed
 
         INACTIVE_ENEMY_FOUND:
-            MOVL R12, 1500                    ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
-            MOVL R11, enemy_counter.l
-            MOVH R11, enemy_counter.h
-            STORE R12, R11, 0               ; Ativa cooldown para o próximo tiro
 
-            ; Ativa o inimigo na memória (R3 já aponta para enemy_active[i])
+
+            ; Ativa o inimigo na memória (R3 aponta para enemy_active[i])
             MOVL R4, 1
             STORE R4, R3, 0
             ; O índice original está em R1. calcular o offset em bytes (R1 * 4)
@@ -1133,8 +1158,8 @@ GAME:
 
 
             ; RANDOM X POSITION FOR ENEMY
-            MOVL R6, 1                      ; Valor mínimo de X
-            MOVL R8, 300                    ; Valor máximo de X (320 da tela - 20 de largura)
+            MOVL R6, 20                      ; Valor mínimo de X
+            MOVL R8, 280                    ; Valor máximo de X (320 da tela - 40 de largura)
             RAND R7, R6, R8                 ; R7 = Random X position for enemy    
 
             ; RANDOM y POSITION FOR ENEMY
@@ -1158,37 +1183,49 @@ GAME:
             STORE R10, R11, 0               ; Mem[enemy_y + (i*4)] = player_y
             BEQ R0, R0, DEPOIS         ; Retorna ao fluxo de movimento
 
-    
-    ; ;;
-    ; MOVL R5, 50
-    ; MOVL R7, 20                      ; Largura (W)
-    ; MOVL R8, 10                      ; Altura (H)
-    ; MOVL R12, BRANCO.l               ; 
-    ; MOVH R12, BRANCO.h
-    ; RECT R5, R6, R7, R8, R12
-
-
     DEPOIS:
-
-
-
-    ; FPS SYNC
+    ; FPS SYNC 
     MOVL R4, movement_frame_counter.l
     MOVH R4, movement_frame_counter.h
-    LOAD R3, R4, 0       ; R3 = Guarda o último frame em que a nave se moveu
-    FRAMENUM R5          ; R5 = Pega o frame atual do relógio
-    BEQ R3, R5, GAME     ; Se o frame for igual, volta pro começo (espera!)
+    LOAD R3, R4, 0                        ; R3 = Guarda o último frame em que a nave se moveu
 
-    ; Se passou do BEQ, significa que o frame mudou (1/60 de segundo se passou!)
+    WAIT_FRAME_LOOP:
+        FRAMENUM R5                      ; R5 = Pega o frame atual do relógio
+        BEQ R3, R5, WAIT_FRAME_LOOP      ; Aguarda sem poluir a tela.
+        
+    ; Se o frame mudou, prossegue:
     STORE R5, R4, 0      ; Atualiza o movement_frame_counter com o novo frame
+
+
+    ; ; OLD FPS SYNC
+    ; MOVL R4, movement_frame_counter.l
+    ; MOVH R4, movement_frame_counter.h
+    ; LOAD R3, R4, 0       ; R3 = Guarda o último frame em que a nave se moveu
+    ; FRAMENUM R5          ; R5 = Pega o frame atual do relógio
+    ; BEQ R3, R5, GAME     ; Se o frame for igual, volta pro começo (espera!)
+
+    ; ; Se passou do BEQ, significa que o frame mudou (1/60 de segundo se passou!)
+    ; STORE R5, R4, 0      ; Atualiza o movement_frame_counter com o novo frame
 
     MANAGE_COOLDOWN:
         MOVL R11, bullet_cooldown.l
         MOVH R11, bullet_cooldown.h
         LOAD R12, R11, 0
         BEQ R12, R0, SPACE_KEY_INPUT    ; Se o cooldown for 0, pronto pra atirar
-        DEC R12                         ; Se for maior que 0, espera 1 frame
+        DEC R12                         
         STORE R12, R11, 0
+        PUSH R7
+        PUSH R8
+        PUSH R10
+        ;; SOM DE TIRO(IRRITANTE)
+        ; MOVL R7, 1      ; waveform
+        ; MOVL R8, 30    ; duração padrão
+        ; MOVL R10, 4000   ; frequência
+        ; PLAY R10, R8, R7
+
+        POP R10
+        POP R8
+        POP R7
         BEQ R0, R0, MOVE_PLAYER         ; Ignora até cooldown terminar
 
     SPACE_KEY_INPUT:
@@ -1212,7 +1249,7 @@ GAME:
 
         INACTIVE_BULLET_FOUND:
 
-            MOVL R12, 5                  ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
+            MOVL R12, 12                 ; 15 frames de cooldown (Trava o tiro por 1/4 de segundo)
             MOVL R11, bullet_cooldown.l
             MOVH R11, bullet_cooldown.h
             STORE R12, R11, 0               ; Ativa cooldown para o próximo tiro
@@ -1272,8 +1309,10 @@ GAME:
             MOVL R3, LEFT_ARROW_KEYCODE
             GKEY R4, R3
             BEQ R4, R0, RIGHT_ARROW
-            ; LEFET LIMIT 
-            BEQ R1, R0, RIGHT_ARROW
+            ; LEFT LIMIT 
+            MOVL R12, 26
+            
+            BLT R1, R12, RIGHT_ARROW
             DEC R1
             DEC R1
 
@@ -1282,7 +1321,7 @@ GAME:
             GKEY R4, R3
             BEQ R4, R0, UP_ARROW
             ; RIGHT LIMIT 
-            MOVL R8, 304
+            MOVL R8, 280
             BGE R1, R8, UP_ARROW
             INC R1
             INC R1
