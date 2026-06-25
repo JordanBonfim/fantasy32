@@ -42,6 +42,7 @@ heart_sprite:
 
 
 msg: .string "WELCOME TO DOOMSHIP!"
+start_message: .string "PRESS SPACE TO LAUNCH!"
 END_STRING: .string "YOU LOSE!"
 
 score: .var 0
@@ -66,6 +67,44 @@ bullet_sprite:
 
 .text
 START:
+    MOVL R5, PRETO.l
+    MOVH R5, PRETO.h
+    CLEAR R5
+
+    WAIT_FOR_USER_START:
+
+        MOVL R8, AZUL.l         ; color = branco (ARGB)
+        MOVH R8, AZUL.h         ; color = branco (ARGB)
+
+
+        MOVL R5, 80            ; x = 160
+        MOVL R6, 60            ; y = 120
+        MOVL R7, msg.l          ; endereço da string (parte baixa)
+        MOVH R7, msg.h          ; endereço da string (parte alta)
+        
+        PSTR R5, R6, R7, R8 
+
+        MOVL R5, 80            ; x = 160
+        MOVL R6, 90            ; y = 120
+        MOVL R7, start_message.l          ; endereço da string (parte baixa)
+        MOVH R7, start_message.h          ; endereço da string (parte alta)
+        MOVL R8, BRANCO.l         ; color = branco (ARGB)
+        MOVH R8, BRANCO.h         ; color = branco (ARGB)
+        PSTR R5, R6, R7, R8 
+
+
+        MOVL R3, SPACE_KEYCODE 
+        GKEY R4, R3
+        BEQ R4, R0, WAIT_FOR_USER_START ; Se a barra de espaço não estiver pressionada fica em loop
+
+
+    MOVL R5, PRETO.l
+    MOVH R5, PRETO.h
+
+    MOVL R2, 300
+    SLEEP R2
+    CLEAR R5
+
     FRAMENUM R1
     SRAND R1
 
@@ -630,7 +669,7 @@ DRAW_STARS_BACKGROUND:
             MOVL R1, 300                      ; x
             MOVL R2, 0                      ; y
             MOVL R3, 12                      ; Largura (W)
-            MOVL R4, 200                      ; Altura (H)
+            MOVL R4, 240                      ; Altura (H)
             MOVL R5, PRETO.l               
             MOVH R5, PRETO.h
             RECT R1, R2, R3, R4, R5 
