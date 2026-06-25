@@ -9,12 +9,12 @@ TARGET    := $(BUILD_DIR)/app
 BIN ?= src/assembler/prog1.bin
 ASSEMBLER := src/assembler/assembler
 TETRIS_BIN := $(BUILD_DIR)/tetris
-
+SPACE-SHOOTER_BIN := $(BUILD_DIR)/space-shooter
 SRCS := src/main.cpp $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
 
-.PHONY: all clean run tetris
+.PHONY: all clean run tetris space-shooter
 
 all: $(TARGET)
 
@@ -25,6 +25,11 @@ tetris: $(TARGET)
 	mkdir -p $(BUILD_DIR)
 	$(ASSEMBLER) src/game/tetris/tetris.asm $(TETRIS_BIN)
 	$(TARGET) $(TETRIS_BIN)
+
+space-shooter: $(TARGET)
+	mkdir -p $(BUILD_DIR)
+	$(ASSEMBLER) src/game/space-shooter/space_shooter.asm $(SPACE-SHOOTER_BIN)
+	$(TARGET) $(SPACE-SHOOTER_BIN)
 
 $(TARGET): $(OBJS)
 	$(CXX) $^ -o $@ $(SDL_LIBS)
