@@ -64,7 +64,7 @@ Esses comandos compilam o executável principal (se ainda não tiver sido compil
 |---|---|
 | Compilar o projeto | `make` |
 | Limpar arquivos compilados | `make clean` |
-| Compilar e rodar o Tetris | `make compilar-tetris` |
-| Compilar e rodar o Space Shooter | `make compilar-space-shooter` |
+| Compilar o Tetris | `make compilar-tetris` |
+| Compilar o Space Shooter | `make compilar-space-shooter` |
 
 > Para detalhes sobre como executar o programa com opções específicas (escala da janela, desativar `SYSCALL`, etc.), consulte o arquivo `README_USO.pdf`.
