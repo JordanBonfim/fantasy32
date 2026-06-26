@@ -57,6 +57,7 @@ enemy_spawn_timeout: .var 120
 player_health: .var 5
 movement_frame_counter: .var 0
 
+games_played: .var 0
 
 msg: .string "WELCOME TO DOOMSHIP!"
 start_message: .string "PRESS SPACE TO LAUNCH!"
@@ -68,7 +69,9 @@ score: .var 0
 best_score: .var 0
 
 play_again: .string "Play Again!"
+play_initial: .string "Play!"
 exit: .string "Exit"
+point_multiplier: .var 1
 
 .text
 
@@ -212,14 +215,32 @@ DRAW_OPTION_SCREEN:
 
 
 
-    MOVL R5, 116                    ; x 
-    MOVL R6, 80                    ; y
-    MOVL R7, play_again.l          ; endereço da string (parte baixa)
-    MOVH R7, play_again.h          ; endereço da string (parte alta)
-    MOVL R8, AMARELO.l             ; color
-    MOVH R8, AMARELO.h             ; color
+    MOVL R5, games_played.l
+    MOVH R5, games_played.h
+    LOAD R5, R5, 0
+
+    BGT R5, R0, PRINT_TRY_AGAIN_1
+
+    ; Primeira partida
+    MOVL R5, 140
+    MOVL R6, 80
+    MOVL R7, play_initial.l
+    MOVH R7, play_initial.h
+    MOVL R8, AMARELO.l
+    MOVH R8, AMARELO.h
+    PSTR R5, R6, R7, R8
+    JMP END_PRINT_1
+
+    PRINT_TRY_AGAIN_1:
+    MOVL R5, 116
+    MOVL R6, 80
+    MOVL R7, play_again.l
+    MOVH R7, play_again.h
+    MOVL R8, AMARELO.l
+    MOVH R8, AMARELO.h
     PSTR R5, R6, R7, R8
 
+    END_PRINT_1:
 
     MOVL R5, 144              ; x 
     MOVL R6, 100              ; y 
@@ -682,7 +703,7 @@ GAME_LOOP:
     
     HEALTH_1:
     DEC R8     
-    BLE R4, R8, END_GAME
+    BLE R4, R8, BEFORE_END_GAME
 
     MOVL R1, 10                     ; X
     MOVL R2, 200                    ; Y
@@ -929,11 +950,36 @@ GAME_LOOP:
             MOVL R7, score.l
             MOVH R7, score.h
 
+            PUSH R10
+            PUSH R11           
+            PUSH R12
+
+            MOVL R10, point_multiplier.l
+            MOVH R10, point_multiplier.h
+            LOAD R12, R10, 0
+            
             LOAD R8, R7, 0
             MOVL R9, 100
-            ADD R8, R8, R9
 
-            ; CLEAN OLD STORE
+            MUL R9, R9, R12
+
+            ADD R8, R8, R9
+            STORE R8, R7, 0
+            MOVL R11, 1900
+            
+            BLE R8, R11, SKIP_INC        ; Se R8 <= 2000, pula o incremento 
+            
+            ; Se passou de 2000, incrementa o multiplicador
+            MOVL R12, 2
+            STORE R12, R10, 0   ; Salva o novo point_multiplier de volta na memória
+
+            SKIP_INC:
+            POP R12
+            POP R11
+            POP R10
+
+
+            ; CLEAN OLD SCORE
             MOVL R1, 10        
             MOVL R2, 10          
             MOVL R3, 48
@@ -943,8 +989,6 @@ GAME_LOOP:
             RECT R1, R2, R3, R4, R5
 
             
-
-            STORE R8, R7, 0
 
             
             ; Inimigo abatido, sem necessidade de verificar mais
@@ -1010,7 +1054,7 @@ GAME_LOOP:
             PUSH R2
             PUSH R3
             PUSH R4
-        
+
             ; APAGAR VIDA
             MOVL R1, 10                      ; x
             MOVL R2, 120                      ; y
@@ -1358,9 +1402,20 @@ GAME:
 
 
 
+BEFORE_END_GAME:
 
+    PUSH R1
+    PUSH R2
+    MOVL R1, games_played.l
+    MOVH R1, games_played.h
+    LOAD R2, R1, 0
+    INC R2
+    STORE R2, R1, 0
 
+    POP R2
+    POP R1
 END_GAME:
+    
     CALL DRAW_OPTION_SCREEN
 
     MOVL R10, 0 ; SELECTED OPITION
@@ -1383,13 +1438,33 @@ END_GAME:
             BEQ R4, R0, DOWN_ARROW_OPTION
 
 
-            MOVL R5, 116            ; x = 160
-            MOVL R6, 80            ; y = 120
-            MOVL R7, play_again.l          ; endereço da string (parte baixa)
-            MOVH R7, play_again.h          ; endereço da string (parte alta)
-            MOVL R8, AMARELO.l         ; color = branco (ARGB)
-            MOVH R8, AMARELO.h         ; color = branco (ARGB)
+
+            MOVL R5, games_played.l
+            MOVH R5, games_played.h
+            LOAD R5, R5, 0
+
+            BGT R5, R0, PRINT_TRY_AGAIN_2
+
+            ; Primeira partida
+            MOVL R5, 140
+            MOVL R6, 80
+            MOVL R7, play_initial.l
+            MOVH R7, play_initial.h
+            MOVL R8, AMARELO.l
+            MOVH R8, AMARELO.h
             PSTR R5, R6, R7, R8
+            JMP END_PRINT_2
+
+            PRINT_TRY_AGAIN_2:
+            MOVL R5, 116
+            MOVL R6, 80
+            MOVL R7, play_again.l
+            MOVH R7, play_again.h
+            MOVL R8, AMARELO.l
+            MOVH R8, AMARELO.h
+            PSTR R5, R6, R7, R8
+
+            END_PRINT_2:
 
 
             MOVL R5, 144              ; x 
@@ -1408,13 +1483,32 @@ END_GAME:
             GKEY R4, R3
             BEQ R4, R0, END_SCREEN_LOOP
 
-            MOVL R5, 116            ; x = 160
-            MOVL R6, 80            ; y = 120
-            MOVL R7, play_again.l          ; endereço da string (parte baixa)
-            MOVH R7, play_again.h          ; endereço da string (parte alta)
-            MOVL R8, BRANCO.l         ; color = branco (ARGB)
-            MOVH R8, BRANCO.h         ; color = branco (ARGB)
+            MOVL R5, games_played.l
+            MOVH R5, games_played.h
+            LOAD R5, R5, 0
+
+            BGT R5, R0, PRINT_TRY_AGAIN_3
+
+            ; Primeira partida
+            MOVL R5, 140
+            MOVL R6, 80
+            MOVL R7, play_initial.l
+            MOVH R7, play_initial.h
+            MOVL R8, BRANCO.l
+            MOVH R8, BRANCO.h
             PSTR R5, R6, R7, R8
+            JMP END_PRINT_3
+
+            PRINT_TRY_AGAIN_3:
+            MOVL R5, 116
+            MOVL R6, 80
+            MOVL R7, play_again.l
+            MOVH R7, play_again.h
+            MOVL R8, BRANCO.l
+            MOVH R8, BRANCO.h
+            PSTR R5, R6, R7, R8
+
+            END_PRINT_3:
 
             MOVL R5, 144              ; x 
             MOVL R6, 100              ; y 
