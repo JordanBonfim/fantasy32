@@ -797,8 +797,8 @@ GENERATE_NEXT_PIECE:
     RET
 
 ; define posicoes de r9 ate r12
-; se o spawn tá ocpado, vai para direita e se a direita tiver ocupada ou for o fim do mapa vc perdeu marreco
-SAFE_SPAWN:
+; se o spawn tá ocupado, vvc perdeu marreco
+VERIFY_SPAWN:
 
     ; verifica se as posições novas estão vazias
     MOVL R2, 2
@@ -810,76 +810,23 @@ SAFE_SPAWN:
     SHL R1, R9,  R2
     ADD R1, R1, R4
     LOAD R5, R1, 0
-    BNE R5, R3, INCREMENT_SPAWN
+    BNE R5, R3, LOSE
 
     SHL R1, R10, R2
     ADD R1, R1, R4
     LOAD R5, R1, 0
-    BNE R5, R3, INCREMENT_SPAWN
+    BNE R5, R3, LOSE
 
     SHL R1, R11, R2
     ADD R1, R1, R4
     LOAD R5, R1, 0
-    BNE R5, R3, INCREMENT_SPAWN
+    BNE R5, R3, LOSE
 
     SHL R1, R12, R2
     ADD R1, R1, R4
     LOAD R5, R1, 0
-    BNE R5, R3, INCREMENT_SPAWN
+    BNE R5, R3, LOSE
     RET
-    
-    INCREMENT_SPAWN:
-
-        MOVL R8, 1        
-        MOVL R2, COLL_N
-
-        DIV R3, R9,  R2
-        DIV R4, R10, R2
-        DIV R5, R11, R2
-        DIV R6, R12, R2
-
-        ADD R9,  R9,  R8
-        ADD R10, R10, R8
-        ADD R11, R11, R8
-        ADD R12, R12, R8
-
-        DIV R7, R9,  R2
-        BNE R3, R7, LOSE
-        DIV R7, R10, R2
-        BNE R4, R7, LOSE
-        DIV R7, R11, R2
-        BNE R5, R7, LOSE
-        DIV R7, R12, R2
-        BNE R6, R7, LOSE
-
-        ; verifica se as posições novas estão vazias
-        MOVL R2, 2
-        MOVL R3, PRETO.l
-        MOVH R3, PRETO.h
-        MOVL R4, MATRIZ.l
-        MOVH R4, MATRIZ.h
-
-        SHL R1, R9,  R2
-        ADD R1, R1, R4
-        LOAD R5, R1, 0
-        BNE R5, R3, LOSE
-
-        SHL R1, R10, R2
-        ADD R1, R1, R4
-        LOAD R5, R1, 0
-        BNE R5, R3, LOSE
-
-        SHL R1, R11, R2
-        ADD R1, R1, R4
-        LOAD R5, R1, 0
-        BNE R5, R3, LOSE
-
-        SHL R1, R12, R2
-        ADD R1, R1, R4
-        LOAD R5, R1, 0
-        BNE R5, R3, LOSE
-
-        RET
 
 ; define posicoes de r9 ate r12 e r13 deve ser a cor
 DRAW_L:
@@ -889,7 +836,7 @@ DRAW_L:
     MOVL R12, 25
     MOVL R13, VERMELHO.l
     MOVH R13, VERMELHO.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -900,7 +847,7 @@ DRAW_J:
     MOVL R12, 24
     MOVL R13, AZUL.l
     MOVH R13, AZUL.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -911,7 +858,7 @@ DRAW_I:
     MOVL R12, 6
     MOVL R13, CIANO.l
     MOVH R13, CIANO.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -922,7 +869,7 @@ DRAW_T:
     MOVL R12, 24
     MOVL R13, ROXO.l
     MOVH R13, ROXO.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -933,7 +880,7 @@ DRAW_O:
     MOVL R12, 15
     MOVL R13, AMARELO.l
     MOVH R13, AMARELO.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -944,7 +891,7 @@ DRAW_S:
     MOVL R12, 24
     MOVL R13, VERDE.l
     MOVH R13, VERDE.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -955,7 +902,7 @@ DRAW_Z:
     MOVL R12, 25
     MOVL R13, LARANJA.l
     MOVH R13, LARANJA.h
-    CALL SAFE_SPAWN
+    CALL VERIFY_SPAWN
     CALL SAVE_POS
     RET
 
@@ -1003,3 +950,4 @@ LOSE:
 
 END_GAME:
     HALT
+    

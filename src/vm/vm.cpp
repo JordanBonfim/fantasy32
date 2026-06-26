@@ -17,11 +17,13 @@ struct AudioState {
   std::atomic<double> phase;
 };
 
-VM::VM() {
+VM::VM(int scale, bool no_syscall) {
   this->mem = new uint8_t[S_MEM];
   memset(this->mem, 0, S_MEM * sizeof(uint8_t));
   memset(this->regs, 0, 16 * sizeof(int32_t));
   this->regs[SP] = 0x00FFFFFF; // Stack Pointer starts at the end of memory
+
+  this->no_syscall = no_syscall;
 
   // Usando o sdl para cria um janela, cria e criar uma textura, e nela
   // renderizar os pixels da memória de vídeo
@@ -61,7 +63,7 @@ bool VM::writeMem(uint32_t addr, uint32_t value) {
   return true;
 }
 
-void VM::load(char *arqBin) {
+void VM::load(const char *arqBin) {
   FILE *bin = fopen(arqBin, "rb");
   fseek(bin, 0, SEEK_END);
   int binSize = ftell(bin) - sizeof(uint32_t);
@@ -368,6 +370,12 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     const uint32_t rb = this->regs[i_rb];
     uint32_t rc = this->regs[i_rc];
     uint32_t rd = this->regs[i_rd];
+    const uint32_t color = this->regs[i_re];
+
+    // Se for transparente, não precisa mudar
+    if (color == 0x00000000) {
+      break;
+    }
 
     const uint32_t w = this->w;
     const uint32_t h = this->h;
@@ -391,7 +399,7 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
     for (uint32_t i = 0; i < rd; i++) {
       uint32_t *row = base + ((rb + i) * w + ra);
       for (uint32_t j = 0; j < rc; j++) {
-        row[j] = this->regs[i_re];
+        row[j] = color;
       }
     }
     break;
@@ -410,7 +418,9 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
           continue;
         }
         uint32_t color = readMem(sprite_addr + ((row * width + col) * 4));
-        base[(y + row) * w + (x + col)] = color;
+        if (color != 0x00000000) {
+          base[(y + row) * w + (x + col)] = color;
+        }
       }
     }
     break;
@@ -464,6 +474,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case SYSCALL: {
+    if (this->no_syscall) {
+      break;
+    }
+
     uint32_t code = this->regs[i_ra];
     uint32_t arg1 = this->regs[i_rb];
     // uint32_t arg2 = this->regs[i_rc];
@@ -517,8 +531,10 @@ void VM::execTypeS(uint32_t instr, uint32_t opcode) {
   }
 
   case RAND: {
-    this->regs[i_ra] = rand() % (this->regs[i_rc] + 1) + this->regs[i_rb];
+    uint32_t min = this->regs[i_rb];
+    uint32_t max = this->regs[i_rc];
 
+    this->regs[i_ra] = min + (rand() % (max - min + 1));
     break;
   }
 
